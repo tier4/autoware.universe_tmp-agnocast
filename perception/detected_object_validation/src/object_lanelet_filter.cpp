@@ -59,8 +59,11 @@ ObjectLaneletFilterNode::ObjectLaneletFilterNode(const rclcpp::NodeOptions & nod
     std::bind(&ObjectLaneletFilterNode::mapCallback, this, _1));
   object_sub_ = this->create_subscription<autoware_perception_msgs::msg::DetectedObjects>(
     "input/object", rclcpp::QoS{1}, std::bind(&ObjectLaneletFilterNode::objectCallback, this, _1));
-  object_pub_ = this->create_publisher<autoware_perception_msgs::msg::DetectedObjects>(
-    "output/object", rclcpp::QoS{1});
+
+  // 追記
+  object_pub_ = agnocast::create_publisher<autoware_perception_msgs::msg::DetectedObjects>("output/object");
+  // object_pub_ = this->create_publisher<autoware_perception_msgs::msg::DetectedObjects>(
+  //   "output/object", rclcpp::QoS{1});
 
   debug_publisher_ =
     std::make_unique<autoware::universe_utils::DebugPublisher>(this, "object_lanelet_filter");
@@ -83,10 +86,14 @@ void ObjectLaneletFilterNode::objectCallback(
   const autoware_perception_msgs::msg::DetectedObjects::ConstSharedPtr input_msg)
 {
   // Guard
-  if (object_pub_->get_subscription_count() < 1) return;
 
-  autoware_perception_msgs::msg::DetectedObjects output_object_msg;
-  output_object_msg.header = input_msg->header;
+  // 追加
+  // if (object_pub_->get_subscription_count() < 1) return;
+
+  // 追加
+  agnocast::message_ptr<autoware_perception_msgs::msg::DetectedObjects> output_object_msg = object_pub_->borrow_loaned_message();
+  // autoware_perception_msgs::msg::DetectedObjects output_object_msg;
+  output_object_msg->header = input_msg->header;
 
   if (!lanelet_map_ptr_) {
     RCLCPP_ERROR(get_logger(), "No vector map received.");
@@ -113,16 +120,19 @@ void ObjectLaneletFilterNode::objectCallback(
     const auto & input_object = input_msg->objects.at(index);
     filterObject(
       transformed_object, input_object, intersected_road_lanelets, intersected_shoulder_lanelets,
-      output_object_msg);
+      *output_object_msg);
   }
-  object_pub_->publish(output_object_msg);
-  published_time_publisher_->publish_if_subscribed(object_pub_, output_object_msg.header.stamp);
+
+  // 追加
+  object_pub_->publish(std::move(output_object_msg));
+
+  // published_time_publisher_->publish_if_subscribed(object_pub_, output_object_msg.header.stamp);
 
   // Publish debug info
   const double pipeline_latency =
     std::chrono::duration<double, std::milli>(
       std::chrono::nanoseconds(
-        (this->get_clock()->now() - output_object_msg.header.stamp).nanoseconds()))
+        (this->get_clock()->now() - output_object_msg->header.stamp).nanoseconds()))
       .count();
   debug_publisher_->publish<tier4_debug_msgs::msg::Float64Stamped>(
     "debug/pipeline_latency_ms", pipeline_latency);

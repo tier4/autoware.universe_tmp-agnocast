@@ -26,6 +26,8 @@
 #include <utility>
 #include <vector>
 
+#include "agnocast.hpp"
+
 namespace multi_object_tracker
 {
 using DetectedObjects = autoware_perception_msgs::msg::DetectedObjects;
@@ -52,7 +54,7 @@ public:
     func_trigger_ = func_trigger;
   }
 
-  void onMessage(const autoware_perception_msgs::msg::DetectedObjects::ConstSharedPtr msg);
+  void onMessage(agnocast::message_ptr<autoware_perception_msgs::msg::DetectedObjects> msg);
   void updateTimingStatus(const rclcpp::Time & now, const rclcpp::Time & objects_time);
 
   bool isTimeInitialized() const { return initial_count_ > 0; }
@@ -132,6 +134,8 @@ public:
 private:
   rclcpp::Node & node_;
   std::vector<rclcpp::Subscription<DetectedObjects>::SharedPtr> sub_objects_array_{};
+  
+  std::shared_ptr<agnocast::Subscription<DetectedObjects>> sub_objects_;
 
   bool is_initialized_{false};
   rclcpp::Time latest_exported_object_time_;

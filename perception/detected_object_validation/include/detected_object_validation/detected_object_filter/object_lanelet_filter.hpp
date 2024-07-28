@@ -33,6 +33,8 @@
 #include <memory>
 #include <string>
 
+#include "agnocast.hpp"
+
 namespace object_lanelet_filter
 {
 using autoware::universe_utils::LinearRing2d;
@@ -49,7 +51,10 @@ private:
   void objectCallback(const autoware_perception_msgs::msg::DetectedObjects::ConstSharedPtr);
   void mapCallback(const autoware_map_msgs::msg::LaneletMapBin::ConstSharedPtr);
 
-  rclcpp::Publisher<autoware_perception_msgs::msg::DetectedObjects>::SharedPtr object_pub_;
+  // 追加
+  std::shared_ptr<agnocast::Publisher<autoware_perception_msgs::msg::DetectedObjects>> object_pub_;
+  // rclcpp::Publisher<autoware_perception_msgs::msg::DetectedObjects>::SharedPtr object_pub_;
+
   rclcpp::Subscription<autoware_map_msgs::msg::LaneletMapBin>::SharedPtr map_sub_;
   rclcpp::Subscription<autoware_perception_msgs::msg::DetectedObjects>::SharedPtr object_sub_;
   std::unique_ptr<autoware::universe_utils::DebugPublisher> debug_publisher_{nullptr};

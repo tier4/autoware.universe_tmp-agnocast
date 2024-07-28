@@ -14,6 +14,8 @@ find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(glog REQUIRED)
 
+find_package(agnocastlib REQUIRED)
+
 include_directories(
   SYSTEM
     ${EIGEN3_INCLUDE_DIR}
@@ -51,6 +53,11 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
 target_link_libraries(${PROJECT_NAME}
   Eigen3::Eigen
   glog::glog
+)
+
+ament_target_dependencies(${PROJECT_NAME} agnocastlib)
+target_include_directories(${PROJECT_NAME} PRIVATE
+  ${agnocastlib_INCLUDE_DIRS}
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}

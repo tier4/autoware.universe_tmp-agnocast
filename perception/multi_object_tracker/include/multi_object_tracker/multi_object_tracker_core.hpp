@@ -68,6 +68,7 @@ private:
   // ROS interface
   rclcpp::Publisher<TrackedObjects>::SharedPtr tracked_objects_pub_;
   rclcpp::Subscription<DetectedObjects>::SharedPtr detected_object_sub_;
+
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
 
