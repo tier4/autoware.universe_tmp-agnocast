@@ -7,6 +7,8 @@
   <arg name="input_channels_path" default="$(find-pkg-share multi_object_tracker)/config/input_channels.param.yaml"/>
 
   <node pkg="multi_object_tracker" exec="multi_object_tracker_node" name="multi_object_tracker" output="screen">
+    <env name="LD_PRELOAD" value="libpreloaded.so"/>
+
     <param name="selected_input_channels" value="$(var selected_input_channels)"/>
     <remap from="output" to="$(var output)"/>
     <param from="$(var tracker_setting_path)"/>
