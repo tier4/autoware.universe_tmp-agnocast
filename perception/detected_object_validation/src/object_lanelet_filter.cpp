@@ -32,6 +32,8 @@ ObjectLaneletFilterNode::ObjectLaneletFilterNode(const rclcpp::NodeOptions & nod
   tf_buffer_(this->get_clock()),
   tf_listener_(tf_buffer_)
 {
+  agnocast::initialize_agnocast();
+
   using std::placeholders::_1;
 
   // Set parameters
@@ -61,7 +63,7 @@ ObjectLaneletFilterNode::ObjectLaneletFilterNode(const rclcpp::NodeOptions & nod
     "input/object", rclcpp::QoS{1}, std::bind(&ObjectLaneletFilterNode::objectCallback, this, _1));
 
   // 追記
-  object_pub_ = agnocast::create_publisher<autoware_perception_msgs::msg::DetectedObjects>("output/object");
+  object_pub_ = agnocast::create_publisher<autoware_perception_msgs::msg::DetectedObjects>("/perception/object_recognition/detection/objects", 1);
   // object_pub_ = this->create_publisher<autoware_perception_msgs::msg::DetectedObjects>(
   //   "output/object", rclcpp::QoS{1});
 
