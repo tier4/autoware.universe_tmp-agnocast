@@ -184,7 +184,6 @@ void InputStream::getObjectsOlderThan(
 ////////////////////////////
 InputManager::InputManager(rclcpp::Node & node) : node_(node)
 {
-  agnocast::initialize_agnocast();
   latest_exported_object_time_ = node_.now() - rclcpp::Duration::from_seconds(3.0);
 }
 

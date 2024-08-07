@@ -32,8 +32,6 @@ ObjectLaneletFilterNode::ObjectLaneletFilterNode(const rclcpp::NodeOptions & nod
   tf_buffer_(this->get_clock()),
   tf_listener_(tf_buffer_)
 {
-  agnocast::initialize_agnocast();
-
   using std::placeholders::_1;
 
   // Set parameters
@@ -89,10 +87,8 @@ void ObjectLaneletFilterNode::objectCallback(
 {
   // Guard
 
-  // 追加
   // if (object_pub_->get_subscription_count() < 1) return;
 
-  // 追加
   agnocast::message_ptr<autoware_perception_msgs::msg::DetectedObjects> output_object_msg = object_pub_->borrow_loaned_message();
   // autoware_perception_msgs::msg::DetectedObjects output_object_msg;
   output_object_msg->header = input_msg->header;
@@ -125,9 +121,7 @@ void ObjectLaneletFilterNode::objectCallback(
       *output_object_msg);
   }
 
-  // 追加
   object_pub_->publish(std::move(output_object_msg));
-
   // published_time_publisher_->publish_if_subscribed(object_pub_, output_object_msg.header.stamp);
 
   // Publish debug info
