@@ -135,7 +135,7 @@ private:
   rclcpp::Node & node_;
   std::vector<rclcpp::Subscription<DetectedObjects>::SharedPtr> sub_objects_array_{};
   
-  std::shared_ptr<agnocast::Subscription<DetectedObjects>> sub_objects_;
+  std::shared_ptr<agnocast::CallbackSubscription<DetectedObjects>> sub_objects_;
 
   bool is_initialized_{false};
   rclcpp::Time latest_exported_object_time_;
