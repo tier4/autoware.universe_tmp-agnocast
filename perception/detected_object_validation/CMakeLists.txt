@@ -17,7 +17,6 @@ find_package(Eigen3 REQUIRED)
 ### Find Boost Dependencies
 find_package(Boost REQUIRED)
 
-### 追記
 find_package(agnocastlib REQUIRED)
 
 include_directories(
@@ -63,7 +62,6 @@ ament_auto_add_library(object_lanelet_filter SHARED
   src/utils.cpp
 )
 
-# 追記
 ament_target_dependencies(object_lanelet_filter agnocastlib)
 target_include_directories(object_lanelet_filter PRIVATE
   ${agnocastlib_INCLUDE_DIRS}
