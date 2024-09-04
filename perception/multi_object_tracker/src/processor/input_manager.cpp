@@ -213,11 +213,10 @@ void InputManager::init(const std::vector<InputChannel> & input_channels)
       node_.get_logger(), "InputManager::init Initializing %s input stream from %s",
       input_channels[i].long_name.c_str(), input_channels[i].input_topic.c_str());
     
-    // std::function<void(const DetectedObjects::ConstSharedPtr msg)> func =
-    //   std::bind(&InputStream::onMessage, input_streams_.at(i), std::placeholders::_1);
+    std::function<void(const agnocast::message_ptr<DetectedObjects> msg)> func =
+      std::bind(&InputStream::onMessage, input_streams_.at(i), std::placeholders::_1);
     
-    sub_objects_ = agnocast::create_subscription<DetectedObjects>("/perception/object_recognition/detection/objects",
-      1, std::bind(&InputStream::onMessage, input_streams_.at(i), std::placeholders::_1));
+    sub_objects_ = agnocast::create_subscription<DetectedObjects>("/perception/object_recognition/detection/objects", rclcpp::QoS{1}, func);
     // sub_objects_array_.at(i) = node_.create_subscription<DetectedObjects>(
     //   input_channels[i].input_topic, rclcpp::QoS{1}, func);
   }

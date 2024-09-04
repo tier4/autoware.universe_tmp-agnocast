@@ -7,6 +7,7 @@
 
   <node pkg="detected_object_validation" exec="object_lanelet_filter_node" name="object_lanelet_filter" output="screen">
     <env name="LD_PRELOAD" value="libpreloaded.so" />
+    <env name="MEMPOOL_SIZE" value="134217728" />  <!-- 128MB-->
 
     <remap from="input/vector_map" to="$(var vector_map_topic)"/>
     <remap from="input/object" to="$(var input/object)"/>

@@ -60,8 +60,8 @@ ObjectLaneletFilterNode::ObjectLaneletFilterNode(const rclcpp::NodeOptions & nod
   object_sub_ = this->create_subscription<autoware_perception_msgs::msg::DetectedObjects>(
     "input/object", rclcpp::QoS{1}, std::bind(&ObjectLaneletFilterNode::objectCallback, this, _1));
 
-  // 追記
-  object_pub_ = agnocast::create_publisher<autoware_perception_msgs::msg::DetectedObjects>("/perception/object_recognition/detection/objects", 1);
+  object_pub_ = agnocast::create_publisher<autoware_perception_msgs::msg::DetectedObjects>(
+    "/perception/object_recognition/detection/objects", rclcpp::QoS{1});
   // object_pub_ = this->create_publisher<autoware_perception_msgs::msg::DetectedObjects>(
   //   "output/object", rclcpp::QoS{1});
 
@@ -86,11 +86,9 @@ void ObjectLaneletFilterNode::objectCallback(
   const autoware_perception_msgs::msg::DetectedObjects::ConstSharedPtr input_msg)
 {
   // Guard
-
   // if (object_pub_->get_subscription_count() < 1) return;
 
   agnocast::message_ptr<autoware_perception_msgs::msg::DetectedObjects> output_object_msg = object_pub_->borrow_loaned_message();
-  // autoware_perception_msgs::msg::DetectedObjects output_object_msg;
   output_object_msg->header = input_msg->header;
 
   if (!lanelet_map_ptr_) {

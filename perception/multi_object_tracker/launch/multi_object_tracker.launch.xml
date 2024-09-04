@@ -8,6 +8,7 @@
 
   <node pkg="multi_object_tracker" exec="multi_object_tracker_node" name="multi_object_tracker" output="screen">
     <env name="LD_PRELOAD" value="libpreloaded.so"/>
+    <env name="MEMPOOL_SIZE" value="134217728" />  <!-- 128MB-->
 
     <param name="selected_input_channels" value="$(var selected_input_channels)"/>
     <remap from="output" to="$(var output)"/>

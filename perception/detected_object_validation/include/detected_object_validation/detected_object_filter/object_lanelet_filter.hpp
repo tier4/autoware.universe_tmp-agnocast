@@ -51,9 +51,7 @@ private:
   void objectCallback(const autoware_perception_msgs::msg::DetectedObjects::ConstSharedPtr);
   void mapCallback(const autoware_map_msgs::msg::LaneletMapBin::ConstSharedPtr);
 
-  // 追加
   std::shared_ptr<agnocast::Publisher<autoware_perception_msgs::msg::DetectedObjects>> object_pub_;
-  // rclcpp::Publisher<autoware_perception_msgs::msg::DetectedObjects>::SharedPtr object_pub_;
 
   rclcpp::Subscription<autoware_map_msgs::msg::LaneletMapBin>::SharedPtr map_sub_;
   rclcpp::Subscription<autoware_perception_msgs::msg::DetectedObjects>::SharedPtr object_sub_;
