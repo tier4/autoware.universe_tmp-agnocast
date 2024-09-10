@@ -13,11 +13,15 @@
 // limitations under the License.
 
 #include "multi_object_tracker/processor/input_manager.hpp"
+#include <pthread.h>
 
 #include <cassert>
 
 namespace multi_object_tracker
 {
+
+extern pthread_mutex_t agnocast_mtx;
+
 ///////////////////////////
 /////// InputStream ///////
 ///////////////////////////
@@ -60,6 +64,8 @@ bool InputStream::getTimestamps(
 void InputStream::onMessage(
   agnocast::message_ptr<autoware_perception_msgs::msg::DetectedObjects> msg)
 {
+  pthread_mutex_lock(&agnocast_mtx);
+
   const DetectedObjects objects = *msg;
   objects_que_.push_back(objects);
   if (objects_que_.size() > que_size_) {
@@ -75,6 +81,8 @@ void InputStream::onMessage(
   if (func_trigger_) {
     func_trigger_(index_);
   }
+
+  pthread_mutex_unlock(&agnocast_mtx);
 }
 
 void InputStream::updateTimingStatus(const rclcpp::Time & now, const rclcpp::Time & objects_time)
