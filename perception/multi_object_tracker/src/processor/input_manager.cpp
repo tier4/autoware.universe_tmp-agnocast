@@ -223,10 +223,11 @@ void InputManager::init(const std::vector<InputChannel> & input_channels)
     
     std::function<void(const agnocast::message_ptr<DetectedObjects> msg)> func =
       std::bind(&InputStream::onMessage, input_streams_.at(i), std::placeholders::_1);
-    
-    // NOTE(Agnocast): this code only works for LSim tutorial rosbag
-    // TODO(Agnocast): solve https://github.com/tier4/agnocast/issues/143
-    sub_objects_ = agnocast::create_subscription<DetectedObjects>("/perception/object_recognition/detection/objects", rclcpp::QoS{1}, func);
+
+    sub_objects_ = agnocast::create_subscription<DetectedObjects>(
+      node_.get_node_topics_interface()->resolve_topic_name(input_channels[i].input_topic),
+      rclcpp::QoS{1}, func);
+
     // sub_objects_array_.at(i) = node_.create_subscription<DetectedObjects>(
     //   input_channels[i].input_topic, rclcpp::QoS{1}, func);
   }

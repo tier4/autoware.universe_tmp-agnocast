@@ -60,9 +60,8 @@ ObjectLaneletFilterNode::ObjectLaneletFilterNode(const rclcpp::NodeOptions & nod
   object_sub_ = this->create_subscription<autoware_perception_msgs::msg::DetectedObjects>(
     "input/object", rclcpp::QoS{1}, std::bind(&ObjectLaneletFilterNode::objectCallback, this, _1));
 
-  // TODO(Agnocast): solve https://github.com/tier4/agnocast/issues/143
   object_pub_ = agnocast::create_publisher<autoware_perception_msgs::msg::DetectedObjects>(
-    "/perception/object_recognition/detection/objects", rclcpp::QoS{1});
+    this->get_node_topics_interface()->resolve_topic_name("output/object"), rclcpp::QoS{1});
   // object_pub_ = this->create_publisher<autoware_perception_msgs::msg::DetectedObjects>(
   //   "output/object", rclcpp::QoS{1});
 
