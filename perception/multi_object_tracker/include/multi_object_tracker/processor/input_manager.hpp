@@ -15,6 +15,7 @@
 #ifndef MULTI_OBJECT_TRACKER__PROCESSOR__INPUT_MANAGER_HPP_
 #define MULTI_OBJECT_TRACKER__PROCESSOR__INPUT_MANAGER_HPP_
 
+#include "agnocast.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "autoware_perception_msgs/msg/detected_objects.hpp"
@@ -25,8 +26,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "agnocast.hpp"
 
 namespace multi_object_tracker
 {
@@ -54,7 +53,7 @@ public:
     func_trigger_ = func_trigger;
   }
 
-  void onMessage(const agnocast::message_ptr<DetectedObjects> msg);
+  void onMessage(const agnocast::shared_ptr<DetectedObjects> msg);
   void updateTimingStatus(const rclcpp::Time & now, const rclcpp::Time & objects_time);
 
   bool isTimeInitialized() const { return initial_count_ > 0; }

@@ -88,7 +88,8 @@ void ObjectLaneletFilterNode::objectCallback(
   // Guard
   if (object_pub_->get_subscription_count() < 1) return;
 
-  agnocast::message_ptr<autoware_perception_msgs::msg::DetectedObjects> output_object_msg = object_pub_->borrow_loaned_message();
+  agnocast::shared_ptr<autoware_perception_msgs::msg::DetectedObjects> output_object_msg =
+    object_pub_->borrow_loaned_message();
   output_object_msg->header = input_msg->header;
 
   if (!lanelet_map_ptr_) {
