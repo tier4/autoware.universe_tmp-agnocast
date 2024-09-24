@@ -53,7 +53,7 @@ public:
     func_trigger_ = func_trigger;
   }
 
-  void onMessage(const agnocast::shared_ptr<DetectedObjects> msg);
+  void onMessage(const agnocast::ipc_shared_ptr<DetectedObjects> msg);
   void updateTimingStatus(const rclcpp::Time & now, const rclcpp::Time & objects_time);
 
   bool isTimeInitialized() const { return initial_count_ > 0; }
@@ -134,7 +134,7 @@ private:
   rclcpp::Node & node_;
   std::vector<rclcpp::Subscription<DetectedObjects>::SharedPtr> sub_objects_array_{};
 
-  std::shared_ptr<agnocast::Subscription<DetectedObjects>> sub_objects_;
+  agnocast::Subscription<DetectedObjects>::SharedPtr sub_objects_;
 
   bool is_initialized_{false};
   rclcpp::Time latest_exported_object_time_;

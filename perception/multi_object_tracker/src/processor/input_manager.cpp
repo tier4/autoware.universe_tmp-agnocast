@@ -63,7 +63,7 @@ bool InputStream::getTimestamps(
 }
 
 void InputStream::onMessage(
-  agnocast::shared_ptr<autoware_perception_msgs::msg::DetectedObjects> msg)
+  agnocast::ipc_shared_ptr<autoware_perception_msgs::msg::DetectedObjects> msg)
 {
   pthread_mutex_lock(&agnocast_mtx);
 
@@ -222,7 +222,7 @@ void InputManager::init(const std::vector<InputChannel> & input_channels)
       node_.get_logger(), "InputManager::init Initializing %s input stream from %s",
       input_channels[i].long_name.c_str(), input_channels[i].input_topic.c_str());
 
-    std::function<void(const agnocast::shared_ptr<DetectedObjects> msg)> func =
+    std::function<void(const agnocast::ipc_shared_ptr<DetectedObjects> msg)> func =
       std::bind(&InputStream::onMessage, input_streams_.at(i), std::placeholders::_1);
 
     sub_objects_ = agnocast::create_subscription<DetectedObjects>(

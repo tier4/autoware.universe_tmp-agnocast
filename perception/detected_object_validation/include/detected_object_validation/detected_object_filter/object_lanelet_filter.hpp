@@ -15,6 +15,7 @@
 #ifndef DETECTED_OBJECT_VALIDATION__DETECTED_OBJECT_FILTER__OBJECT_LANELET_FILTER_HPP_
 #define DETECTED_OBJECT_VALIDATION__DETECTED_OBJECT_FILTER__OBJECT_LANELET_FILTER_HPP_
 
+#include "agnocast.hpp"
 #include "detected_object_validation/utils/utils.hpp"
 
 #include <autoware/universe_utils/geometry/geometry.hpp>
@@ -33,8 +34,6 @@
 #include <memory>
 #include <string>
 
-#include "agnocast.hpp"
-
 namespace object_lanelet_filter
 {
 using autoware::universe_utils::LinearRing2d;
@@ -51,7 +50,7 @@ private:
   void objectCallback(const autoware_perception_msgs::msg::DetectedObjects::ConstSharedPtr);
   void mapCallback(const autoware_map_msgs::msg::LaneletMapBin::ConstSharedPtr);
 
-  std::shared_ptr<agnocast::Publisher<autoware_perception_msgs::msg::DetectedObjects>> object_pub_;
+  agnocast::Publisher<autoware_perception_msgs::msg::DetectedObjects>::SharedPtr object_pub_;
 
   rclcpp::Subscription<autoware_map_msgs::msg::LaneletMapBin>::SharedPtr map_sub_;
   rclcpp::Subscription<autoware_perception_msgs::msg::DetectedObjects>::SharedPtr object_sub_;
