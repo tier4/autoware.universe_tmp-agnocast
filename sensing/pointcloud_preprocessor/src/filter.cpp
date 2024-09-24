@@ -87,10 +87,23 @@ pointcloud_preprocessor::Filter::Filter(
         << " - max_queue_size   : " << max_queue_size_);
   }
 
+  if (this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/top/pointcloud_before_sync" ||
+      this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/left/pointcloud_before_sync" ||
+      this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/right/pointcloud_before_sync") {
+    use_zero_copy_ = true;
+  }
+
   // Set publisher
   {
-    pub_output_ = this->create_publisher<PointCloud2>(
-      "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));
+    if (use_zero_copy_) {
+      pub_output_ = this->create_publisher<PointCloud2>(
+        "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));
+      pub_output_agnocast_ = agnocast::create_publisher<PointCloud2>(
+        this->get_node_topics_interface()->resolve_topic_name("output"), rclcpp::SensorDataQoS().keep_last(max_queue_size_));
+    } else {
+      pub_output_ = this->create_publisher<PointCloud2>(
+        "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));
+    }
   }
 
   subscribe(filter_name);
@@ -357,6 +370,51 @@ bool pointcloud_preprocessor::Filter::calculate_transform_matrix(
   return true;
 }
 
+bool pointcloud_preprocessor::Filter::convert_output_costly(PointCloud2 & output)
+{
+  // In terms of performance, we should avoid using pcl_ros library function,
+  // but this code path isn't reached in the main use case of Autoware, so it's left as is for now.
+  if (!tf_output_frame_.empty() && output.header.frame_id != tf_output_frame_) {
+    RCLCPP_DEBUG(
+      this->get_logger(), "[convert_output_costly] Transforming output dataset from %s to %s.",
+      output.header.frame_id.c_str(), tf_output_frame_.c_str());
+
+    // Convert the cloud into the different frame
+    auto cloud_transformed = std::make_unique<PointCloud2>();
+    if (!pcl_ros::transformPointCloud(tf_output_frame_, output, *cloud_transformed, *tf_buffer_)) {
+      RCLCPP_ERROR(
+        this->get_logger(),
+        "[convert_output_costly] Error converting output dataset from %s to %s.",
+        output.header.frame_id.c_str(), tf_output_frame_.c_str());
+      return false;
+    }
+
+    output = *cloud_transformed;
+  }
+
+  // Same as the comment above
+  if (tf_output_frame_.empty() && output.header.frame_id != tf_input_orig_frame_) {
+    // No tf_output_frame given, transform the dataset to its original frame
+    RCLCPP_DEBUG(
+      this->get_logger(), "[convert_output_costly] Transforming output dataset from %s back to %s.",
+      output.header.frame_id.c_str(), tf_input_orig_frame_.c_str());
+
+    auto cloud_transformed = std::make_unique<PointCloud2>();
+    if (!pcl_ros::transformPointCloud(
+          tf_input_orig_frame_, output, *cloud_transformed, *tf_buffer_)) {
+      RCLCPP_ERROR(
+        this->get_logger(),
+        "[convert_output_costly] Error converting output dataset from %s back to %s.",
+        output.header.frame_id.c_str(), tf_input_orig_frame_.c_str());
+      return false;
+    }
+
+    output = *cloud_transformed;
+  }
+
+  return true;
+}
+
 // Returns false in error cases
 bool pointcloud_preprocessor::Filter::convert_output_costly(std::unique_ptr<PointCloud2> & output)
 {
@@ -448,6 +506,18 @@ void pointcloud_preprocessor::Filter::faster_input_indices_callback(
   IndicesPtr vindices;
   if (indices) {
     vindices.reset(new std::vector<int>(indices->indices));
+  }
+
+  if (use_zero_copy_) {
+    agnocast::message_ptr<PointCloud2> output = pub_output_agnocast_->borrow_loaned_message();
+    
+    faster_filter(cloud, vindices, *output, transform_info);
+
+    if (!convert_output_costly(*output)) return;
+
+    output->header.stamp = cloud->header.stamp;
+
+    pub_output_agnocast_->publish(std::move(output));
   }
 
   auto output = std::make_unique<PointCloud2>();

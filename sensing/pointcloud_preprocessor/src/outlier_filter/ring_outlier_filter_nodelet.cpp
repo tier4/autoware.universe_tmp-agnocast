@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <vector>
+
 namespace pointcloud_preprocessor
 {
 using autoware_point_types::PointXYZIRADRT;
