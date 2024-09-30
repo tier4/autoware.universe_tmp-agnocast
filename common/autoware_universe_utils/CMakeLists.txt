@@ -18,6 +18,12 @@ ament_auto_add_library(autoware_universe_utils SHARED
   src/system/backtrace.cpp
 )
 
+find_package(agnocastlib REQUIRED)
+ament_target_dependencies(autoware_universe_utils agnocastlib)
+target_include_directories(autoware_universe_utils PRIVATE
+  ${agnocastlib_INCLUDE_DIRS}
+)
+
 if(BUILD_TESTING)
   find_package(ament_cmake_ros REQUIRED)
 
