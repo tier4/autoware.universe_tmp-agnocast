@@ -15,6 +15,7 @@
 #ifndef OCCUPANCY_GRID_MAP_OUTLIER_FILTER__OCCUPANCY_GRID_MAP_OUTLIER_FILTER_NODELET_HPP_
 #define OCCUPANCY_GRID_MAP_OUTLIER_FILTER__OCCUPANCY_GRID_MAP_OUTLIER_FILTER_NODELET_HPP_
 
+#include "agnocast.hpp"
 #include "pointcloud_preprocessor/filter.hpp"
 
 #include <autoware/universe_utils/ros/published_time_publisher.hpp>
@@ -105,6 +106,7 @@ private:
 private:
   // publishers and subscribers
   rclcpp::Publisher<PointCloud2>::SharedPtr pointcloud_pub_;
+  agnocast::Publisher<PointCloud2>::SharedPtr agnocast_pointcloud_pub_;
   message_filters::Subscriber<OccupancyGrid> occupancy_grid_map_sub_;
   message_filters::Subscriber<PointCloud2> pointcloud_sub_;
   using SyncPolicy = message_filters::sync_policies::ExactTime<OccupancyGrid, PointCloud2>;

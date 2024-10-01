@@ -253,6 +253,9 @@ OccupancyGridMapOutlierFilterComponent::OccupancyGridMapOutlierFilterComponent(
     &OccupancyGridMapOutlierFilterComponent::onOccupancyGridMapAndPointCloud2, this,
     std::placeholders::_1, std::placeholders::_2));
   pointcloud_pub_ = create_publisher<PointCloud2>("~/output/pointcloud", rclcpp::SensorDataQoS());
+  agnocast_pointcloud_pub_ = agnocast::create_publisher<PointCloud2>(
+    this->get_node_topics_interface()->resolve_topic_name("~/output/pointcloud"),
+    rclcpp::SensorDataQoS());
 
   /* Radius search 2d filter */
   if (use_radius_search_2d_filter) {
@@ -349,13 +352,23 @@ void OccupancyGridMapOutlierFilterComponent::onOccupancyGridMapAndPointCloud2(
   concatPointCloud2(ogm_frame_filtered_pc, ogm_frame_input_behind_pc);
   finalizePointCloud2(ogm_frame_pc, ogm_frame_filtered_pc);
   {
-    auto base_link_frame_filtered_pc_ptr = std::make_unique<PointCloud2>();
+    agnocast::ipc_shared_ptr<PointCloud2> agnocast_base_link_frame_filtered_pc_ptr =
+      agnocast_pointcloud_pub_->borrow_loaned_message();
     ogm_frame_filtered_pc.header = ogm_frame_pc.header;
     if (!transformPointcloud(
-          ogm_frame_filtered_pc, *tf2_, base_link_frame_, *base_link_frame_filtered_pc_ptr)) {
+          ogm_frame_filtered_pc, *tf2_, base_link_frame_,
+          *agnocast_base_link_frame_filtered_pc_ptr)) {
       return;
     }
+    // HACK: copy and publish for subscribers who don't use agnocast
+    auto base_link_frame_filtered_pc_ptr =
+      std::make_unique<PointCloud2>(*agnocast_base_link_frame_filtered_pc_ptr);
     pointcloud_pub_->publish(std::move(base_link_frame_filtered_pc_ptr));
+
+    RCLCPP_INFO(
+      get_logger(), "[agnocast debug] publishing object size: %d",
+      agnocast_base_link_frame_filtered_pc_ptr->data.size());
+    agnocast_pointcloud_pub_->publish(std::move(agnocast_base_link_frame_filtered_pc_ptr));
   }
   if (debugger_ptr_) {
     finalizePointCloud2(ogm_frame_pc, high_confidence_pc);

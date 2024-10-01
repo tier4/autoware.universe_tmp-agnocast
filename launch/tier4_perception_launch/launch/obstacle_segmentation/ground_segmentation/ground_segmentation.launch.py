@@ -543,6 +543,10 @@ def launch_setup(context, *args, **kwargs):
                 output_topic=pipeline.output_topic,
             ),
             output='screen',
+            additional_env={
+                'LD_PRELOAD': 'libpreloaded.so',
+                'MEMPOOL_SIZE': '134217728',  # 128MB
+            },
         )
         return [pointcloud_container_loader, occupancy_container]
 
