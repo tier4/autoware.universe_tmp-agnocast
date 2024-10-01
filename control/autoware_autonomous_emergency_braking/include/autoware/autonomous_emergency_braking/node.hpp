@@ -17,6 +17,7 @@
 
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
 #include <autoware/universe_utils/geometry/geometry.hpp>
+#include <autoware/universe_utils/ros/agnocast_polling_subscriber.hpp>
 #include <autoware/universe_utils/ros/polling_subscriber.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info_utils.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
@@ -247,8 +248,8 @@ public:
   explicit AEB(const rclcpp::NodeOptions & node_options);
 
   // subscriber
-  autoware::universe_utils::InterProcessPollingSubscriber<PointCloud2> sub_point_cloud_{
-    this, "~/input/pointcloud", autoware::universe_utils::SingleDepthSensorQoS()};
+  autoware::universe_utils::AgnocastPollingSubscriber<PointCloud2> sub_point_cloud_{
+    this->get_node_topics_interface()->resolve_topic_name("~/input/pointcloud")};
   autoware::universe_utils::InterProcessPollingSubscriber<VelocityReport> sub_velocity_{
     this, "~/input/velocity"};
   autoware::universe_utils::InterProcessPollingSubscriber<Imu> sub_imu_{this, "~/input/imu"};
@@ -266,7 +267,7 @@ public:
   rclcpp::TimerBase::SharedPtr timer_;
 
   // callback
-  void onPointCloud(const PointCloud2::ConstSharedPtr input_msg);
+  void onPointCloud(const agnocast::ipc_shared_ptr<PointCloud2> input_msg);
   void onImu(const Imu::ConstSharedPtr input_msg);
   void onTimer();
   rcl_interfaces::msg::SetParametersResult onParameter(
