@@ -15,10 +15,10 @@
 #ifndef NODE_HPP_
 #define NODE_HPP_
 
+#include "agnocast.hpp"
 #include "planner_manager.hpp"
 
 #include <autoware/motion_velocity_planner_common/planner_data.hpp>
-#include <autoware/universe_utils/ros/agnocast_polling_subscriber.hpp>
 #include <autoware/universe_utils/ros/logger_level_configure.hpp>
 #include <autoware/universe_utils/ros/polling_subscriber.hpp>
 #include <autoware/universe_utils/ros/published_time_publisher.hpp>
@@ -67,9 +67,8 @@ private:
   autoware::universe_utils::InterProcessPollingSubscriber<
     autoware_perception_msgs::msg::PredictedObjects>
     sub_predicted_objects_{this, "~/input/dynamic_objects"};
-  autoware::universe_utils::AgnocastPollingSubscriber<sensor_msgs::msg::PointCloud2>
-    sub_no_ground_pointcloud_{
-      this->get_node_topics_interface()->resolve_topic_name("~/input/no_ground_pointcloud")};
+  agnocast::PollingSubscriber<sensor_msgs::msg::PointCloud2> sub_no_ground_pointcloud_{
+    this->get_node_topics_interface()->resolve_topic_name("~/input/no_ground_pointcloud")};
   autoware::universe_utils::InterProcessPollingSubscriber<nav_msgs::msg::Odometry>
     sub_vehicle_odometry_{this, "~/input/vehicle_odometry"};
   autoware::universe_utils::InterProcessPollingSubscriber<

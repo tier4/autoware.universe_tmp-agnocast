@@ -15,9 +15,10 @@
 #ifndef AUTOWARE__AUTONOMOUS_EMERGENCY_BRAKING__NODE_HPP_
 #define AUTOWARE__AUTONOMOUS_EMERGENCY_BRAKING__NODE_HPP_
 
+#include "agnocast.hpp"
+
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
 #include <autoware/universe_utils/geometry/geometry.hpp>
-#include <autoware/universe_utils/ros/agnocast_polling_subscriber.hpp>
 #include <autoware/universe_utils/ros/polling_subscriber.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info_utils.hpp>
 #include <diagnostic_updater/diagnostic_updater.hpp>
@@ -248,7 +249,7 @@ public:
   explicit AEB(const rclcpp::NodeOptions & node_options);
 
   // subscriber
-  autoware::universe_utils::AgnocastPollingSubscriber<PointCloud2> sub_point_cloud_{
+  agnocast::PollingSubscriber<PointCloud2> sub_point_cloud_{
     this->get_node_topics_interface()->resolve_topic_name("~/input/pointcloud")};
   autoware::universe_utils::InterProcessPollingSubscriber<VelocityReport> sub_velocity_{
     this, "~/input/velocity"};
