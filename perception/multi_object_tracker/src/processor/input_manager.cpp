@@ -226,6 +226,7 @@ void InputManager::init(const std::vector<InputChannel> & input_channels)
       std::bind(&InputStream::onMessage, input_streams_.at(i), std::placeholders::_1);
 
     sub_objects_ = agnocast::create_subscription<DetectedObjects>(
+      node_.get_node_base_interface(),
       node_.get_node_topics_interface()->resolve_topic_name(input_channels[i].input_topic),
       rclcpp::QoS{1}, func);
 
