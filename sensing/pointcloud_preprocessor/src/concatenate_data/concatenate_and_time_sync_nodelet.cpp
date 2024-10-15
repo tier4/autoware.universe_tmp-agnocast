@@ -73,8 +73,6 @@ PointCloudConcatenateDataSynchronizerComponent::PointCloudConcatenateDataSynchro
 : Node("point_cloud_concatenator_component", node_options),
   input_twist_topic_type_(declare_parameter<std::string>("input_twist_topic_type", "twist"))
 {
-  std::cout << "=========== PointCloudConcatenateDataSynchronizerComponent =========" << std::endl;
-
   // initialize debug tool
   {
     using autoware::universe_utils::DebugPublisher;
@@ -156,8 +154,7 @@ PointCloudConcatenateDataSynchronizerComponent::PointCloudConcatenateDataSynchro
     }
 
     // Subscribe to the filters
-    // filters_.resize(input_topics_.size());
-    filters_agnocast_.resize(input_topics_.size());
+    filters_.resize(input_topics_.size());
 
     // First input_topics_.size () filters are valid
     for (size_t d = 0; d < input_topics_.size(); ++d) {
@@ -165,21 +162,14 @@ PointCloudConcatenateDataSynchronizerComponent::PointCloudConcatenateDataSynchro
       cloud_stdmap_tmp_ = cloud_stdmap_;
 
       // CAN'T use auto type here.
-      // std::function<void(const sensor_msgs::msg::PointCloud2::ConstSharedPtr msg)> cb = std::bind(
-      //   &PointCloudConcatenateDataSynchronizerComponent::cloud_callback, this,
-      //   std::placeholders::_1, input_topics_[d]);
-      std::function<void(const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> msg)> cb_agnocast = std::bind(
-        &PointCloudConcatenateDataSynchronizerComponent::cloud_callback_agnocast, this,
+      std::function<void(const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> msg)> cb = std::bind(
+        &PointCloudConcatenateDataSynchronizerComponent::cloud_callback, this,
         std::placeholders::_1, input_topics_[d]);
 
-      // filters_[d].reset();
-      filters_agnocast_[d].reset();
-
-      // filters_[d] = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-      //   input_topics_[d], rclcpp::SensorDataQoS().keep_last(maximum_queue_size_), cb);
-      filters_agnocast_[d] = agnocast::create_subscription<sensor_msgs::msg::PointCloud2>(
+      filters_[d].reset();
+      filters_[d] = agnocast::create_subscription<sensor_msgs::msg::PointCloud2>(
         this->get_node_topics_interface()->resolve_topic_name(input_topics_[d]),
-        rclcpp::SensorDataQoS().keep_last(maximum_queue_size_), cb_agnocast);
+        rclcpp::SensorDataQoS().keep_last(maximum_queue_size_), cb);
     }
 
     if (input_twist_topic_type_ == "twist") {
@@ -552,72 +542,7 @@ void PointCloudConcatenateDataSynchronizerComponent::setPeriod(const int64_t new
   }
 }
 
-// void PointCloudConcatenateDataSynchronizerComponent::cloud_callback(
-//   const sensor_msgs::msg::PointCloud2::ConstSharedPtr & input_ptr, const std::string & topic_name)
-// {
-//   std::lock_guard<std::mutex> lock(mutex_);
-//   sensor_msgs::msg::PointCloud2::SharedPtr xyzi_input_ptr(new sensor_msgs::msg::PointCloud2());
-//   auto input = std::make_shared<sensor_msgs::msg::PointCloud2>(*input_ptr);
-//   if (input->data.empty()) {
-//     RCLCPP_WARN_STREAM_THROTTLE(
-//       this->get_logger(), *this->get_clock(), 1000, "Empty sensor points!");
-//   } else {
-//     // convert to XYZI pointcloud if pointcloud is not empty
-//     convertToXYZICloud(input, xyzi_input_ptr);
-//   }
-
-//   const bool is_already_subscribed_this = (cloud_stdmap_[topic_name] != nullptr);
-//   const bool is_already_subscribed_tmp = std::any_of(
-//     std::begin(cloud_stdmap_tmp_), std::end(cloud_stdmap_tmp_),
-//     [](const auto & e) { return e.second != nullptr; });
-
-//   if (is_already_subscribed_this) {
-//     cloud_stdmap_tmp_[topic_name] = xyzi_input_ptr;
-
-//     if (!is_already_subscribed_tmp) {
-//       auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(
-//         std::chrono::duration<double>(timeout_sec_));
-//       try {
-//         setPeriod(period.count());
-//       } catch (rclcpp::exceptions::RCLError & ex) {
-//         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "%s", ex.what());
-//       }
-//       timer_->reset();
-//     }
-//   } else {
-//     cloud_stdmap_[topic_name] = xyzi_input_ptr;
-
-//     const bool is_subscribed_all = std::all_of(
-//       std::begin(cloud_stdmap_), std::end(cloud_stdmap_),
-//       [](const auto & e) { return e.second != nullptr; });
-
-//     if (is_subscribed_all) {
-//       for (const auto & e : cloud_stdmap_tmp_) {
-//         if (e.second != nullptr) {
-//           cloud_stdmap_[e.first] = e.second;
-//         }
-//       }
-//       std::for_each(std::begin(cloud_stdmap_tmp_), std::end(cloud_stdmap_tmp_), [](auto & e) {
-//         e.second = nullptr;
-//       });
-
-//       timer_->cancel();
-//       publish();
-//     } else if (offset_map_.size() > 0) {
-//       timer_->cancel();
-//       auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(
-//         std::chrono::duration<double>(timeout_sec_ - offset_map_[topic_name]));
-//       try {
-//         setPeriod(period.count());
-//       } catch (rclcpp::exceptions::RCLError & ex) {
-//         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "%s", ex.what());
-//       }
-//       timer_->reset();
-//     }
-//   }
-// }
-
-void PointCloudConcatenateDataSynchronizerComponent::cloud_callback_agnocast(
+void PointCloudConcatenateDataSynchronizerComponent::cloud_callback(
   const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> input_ptr, const std::string & topic_name)
 {
   std::lock_guard<std::mutex> lock(mutex_);

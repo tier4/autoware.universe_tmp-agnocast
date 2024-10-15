@@ -96,8 +96,6 @@ pointcloud_preprocessor::Filter::Filter(
   // Set publisher
   {
     if (use_zero_copy_) {
-      // pub_output_ = this->create_publisher<PointCloud2>(
-      //   "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));
       pub_output_agnocast_ = agnocast::create_publisher<PointCloud2>(
         this->get_node_topics_interface()->resolve_topic_name("output"), rclcpp::SensorDataQoS().keep_last(max_queue_size_));
     } else {
