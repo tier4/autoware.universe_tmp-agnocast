@@ -45,6 +45,7 @@
 #ifndef AUTOWARE_COSTMAP_GENERATOR__COSTMAP_GENERATOR_HPP_
 #define AUTOWARE_COSTMAP_GENERATOR__COSTMAP_GENERATOR_HPP_
 
+#include "agnocast.hpp"
 #include "autoware_costmap_generator/objects_to_costmap.hpp"
 #include "autoware_costmap_generator/points_to_costmap.hpp"
 
@@ -87,7 +88,8 @@ private:
 
   lanelet::LaneletMapPtr lanelet_map_;
   autoware_perception_msgs::msg::PredictedObjects::ConstSharedPtr objects_;
-  sensor_msgs::msg::PointCloud2::ConstSharedPtr points_;
+  agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> points_ =
+    agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2>();
 
   std::string costmap_frame_;
   std::string vehicle_frame_;
@@ -115,7 +117,7 @@ private:
   rclcpp::Publisher<grid_map_msgs::msg::GridMap>::SharedPtr pub_costmap_;
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr pub_occupancy_grid_;
 
-  rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_points_;
+  agnocast::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_points_;
   rclcpp::Subscription<autoware_perception_msgs::msg::PredictedObjects>::SharedPtr sub_objects_;
   rclcpp::Subscription<autoware_map_msgs::msg::LaneletMapBin>::SharedPtr sub_lanelet_bin_map_;
   rclcpp::Subscription<tier4_planning_msgs::msg::Scenario>::SharedPtr sub_scenario_;
@@ -154,7 +156,7 @@ private:
   /// \brief callback for sensor_msgs::PointCloud2
   /// \param[in] in_points input sensor_msgs::PointCloud2. Assuming ground-filtered pointcloud
   /// by default
-  void onPoints(const sensor_msgs::msg::PointCloud2::ConstSharedPtr msg);
+  void onPoints(agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> msg);
 
   void onScenario(const tier4_planning_msgs::msg::Scenario::ConstSharedPtr msg);
 
@@ -186,7 +188,7 @@ private:
   /// \brief calculate cost from pointcloud data
   /// \param[in] in_points: subscribed pointcloud data
   grid_map::Matrix generatePointsCostmap(
-    const sensor_msgs::msg::PointCloud2::ConstSharedPtr & in_points);
+    const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> & in_points);
 
   /// \brief calculate cost from DynamicObjectArray
   /// \param[in] in_objects: subscribed DynamicObjectArray
