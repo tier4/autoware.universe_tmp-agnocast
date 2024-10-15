@@ -96,8 +96,8 @@ pointcloud_preprocessor::Filter::Filter(
   // Set publisher
   {
     if (use_zero_copy_) {
-      pub_output_ = this->create_publisher<PointCloud2>(
-        "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));
+      // pub_output_ = this->create_publisher<PointCloud2>(
+      //   "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));
       pub_output_agnocast_ = agnocast::create_publisher<PointCloud2>(
         this->get_node_topics_interface()->resolve_topic_name("output"), rclcpp::SensorDataQoS().keep_last(max_queue_size_));
     } else {
@@ -509,27 +509,20 @@ void pointcloud_preprocessor::Filter::faster_input_indices_callback(
   }
 
   if (use_zero_copy_) {
-    agnocast::message_ptr<PointCloud2> output = pub_output_agnocast_->borrow_loaned_message();
-    
+    agnocast::ipc_shared_ptr<PointCloud2> output = pub_output_agnocast_->borrow_loaned_message();
     faster_filter(cloud, vindices, *output, transform_info);
-
     if (!convert_output_costly(*output)) return;
-
     output->header.stamp = cloud->header.stamp;
-
     pub_output_agnocast_->publish(std::move(output));
+  } else {
+    auto output = std::make_unique<PointCloud2>();
+    // TODO(sykwer): Change to `filter()` call after when the filter nodes conform to new API.
+    faster_filter(cloud, vindices, *output, transform_info);
+    if (!convert_output_costly(output)) return;
+    output->header.stamp = cloud->header.stamp;
+    pub_output_->publish(std::move(output));
+    published_time_publisher_->publish_if_subscribed(pub_output_, cloud->header.stamp);
   }
-
-  auto output = std::make_unique<PointCloud2>();
-
-  // TODO(sykwer): Change to `filter()` call after when the filter nodes conform to new API.
-  faster_filter(cloud, vindices, *output, transform_info);
-
-  if (!convert_output_costly(output)) return;
-
-  output->header.stamp = cloud->header.stamp;
-  pub_output_->publish(std::move(output));
-  published_time_publisher_->publish_if_subscribed(pub_output_, cloud->header.stamp);
 }
 
 // TODO(sykwer): Temporary Implementation: Remove this interface when all the filter nodes conform

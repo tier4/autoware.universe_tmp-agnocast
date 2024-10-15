@@ -134,8 +134,8 @@ private:
   std::set<std::string> not_subscribed_topic_names_;
 
   /** \brief A vector of subscriber. */
-  std::vector<rclcpp::Subscription<PointCloud2>::SharedPtr> filters_;
-  std::vector<std::shared_ptr<agnocast::CallbackSubscription<PointCloud2>>> filters_agnocast_;
+  // std::vector<rclcpp::Subscription<PointCloud2>::SharedPtr> filters_;
+  std::vector<std::shared_ptr<agnocast::Subscription<PointCloud2>>> filters_agnocast_;
 
   rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr sub_twist_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr sub_odom_;
@@ -176,11 +176,11 @@ private:
     const sensor_msgs::msg::PointCloud2::SharedPtr & input_ptr,
     sensor_msgs::msg::PointCloud2::SharedPtr & output_ptr);
   void setPeriod(const int64_t new_period);
-  void cloud_callback(
-    const sensor_msgs::msg::PointCloud2::ConstSharedPtr & input_ptr,
-    const std::string & topic_name);
+  // void cloud_callback(
+  //   const sensor_msgs::msg::PointCloud2::ConstSharedPtr & input_ptr,
+  //   const std::string & topic_name);
   void cloud_callback_agnocast(
-    const agnocast::message_ptr<sensor_msgs::msg::PointCloud2> input_ptr,
+    const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> input_ptr,
     const std::string & topic_name);
   void twist_callback(const geometry_msgs::msg::TwistWithCovarianceStamped::ConstSharedPtr input);
   void odom_callback(const nav_msgs::msg::Odometry::ConstSharedPtr input);
