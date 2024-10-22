@@ -105,7 +105,6 @@ private:
 
 private:
   // publishers and subscribers
-  rclcpp::Publisher<PointCloud2>::SharedPtr pointcloud_pub_;
   agnocast::Publisher<PointCloud2>::SharedPtr agnocast_pointcloud_pub_;
   message_filters::Subscriber<OccupancyGrid> occupancy_grid_map_sub_;
   message_filters::Subscriber<PointCloud2> pointcloud_sub_;

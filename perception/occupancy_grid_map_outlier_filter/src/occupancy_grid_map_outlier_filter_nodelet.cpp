@@ -252,7 +252,6 @@ OccupancyGridMapOutlierFilterComponent::OccupancyGridMapOutlierFilterComponent(
   sync_ptr_->registerCallback(std::bind(
     &OccupancyGridMapOutlierFilterComponent::onOccupancyGridMapAndPointCloud2, this,
     std::placeholders::_1, std::placeholders::_2));
-  pointcloud_pub_ = create_publisher<PointCloud2>("~/output/pointcloud", rclcpp::SensorDataQoS());
   agnocast_pointcloud_pub_ = agnocast::create_publisher<PointCloud2>(
     this->get_node_topics_interface()->resolve_topic_name("~/output/pointcloud"),
     rclcpp::SensorDataQoS());
@@ -360,10 +359,6 @@ void OccupancyGridMapOutlierFilterComponent::onOccupancyGridMapAndPointCloud2(
           *agnocast_base_link_frame_filtered_pc_ptr)) {
       return;
     }
-    // HACK: copy and publish for subscribers who don't use agnocast
-    auto base_link_frame_filtered_pc_ptr =
-      std::make_unique<PointCloud2>(*agnocast_base_link_frame_filtered_pc_ptr);
-    pointcloud_pub_->publish(std::move(base_link_frame_filtered_pc_ptr));
 
     RCLCPP_INFO(
       get_logger(), "[agnocast debug] publishing object size: %d",
