@@ -70,8 +70,6 @@ namespace multi_object_tracker
 {
 using Label = autoware_perception_msgs::msg::ObjectClassification;
 
-pthread_mutex_t agnocast_mtx = PTHREAD_MUTEX_INITIALIZER;
-
 MultiObjectTracker::MultiObjectTracker(const rclcpp::NodeOptions & node_options)
 : rclcpp::Node("multi_object_tracker", node_options),
   tf_buffer_(this->get_clock()),
@@ -232,8 +230,6 @@ void MultiObjectTracker::onTrigger()
 
 void MultiObjectTracker::onTimer()
 {
-  pthread_mutex_lock(&agnocast_mtx);
-
   const rclcpp::Time current_time = this->now();
 
   // Check the publish period
@@ -242,7 +238,6 @@ void MultiObjectTracker::onTimer()
   constexpr double maximum_latency_ratio = 1.11;  // 11% margin
   const double maximum_publish_latency = publisher_period_ * maximum_latency_ratio;
   if (elapsed_time < maximum_publish_latency) {
-    pthread_mutex_unlock(&agnocast_mtx);
     return;
   }
 
@@ -255,8 +250,6 @@ void MultiObjectTracker::onTimer()
 
   // Publish
   checkAndPublish(current_time);
-
-  pthread_mutex_unlock(&agnocast_mtx);
 }
 
 void MultiObjectTracker::onMessage(const ObjectsList & objects_list)
