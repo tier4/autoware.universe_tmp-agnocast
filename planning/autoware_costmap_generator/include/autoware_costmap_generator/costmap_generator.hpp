@@ -88,8 +88,7 @@ private:
 
   lanelet::LaneletMapPtr lanelet_map_;
   autoware_perception_msgs::msg::PredictedObjects::ConstSharedPtr objects_;
-  agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> points_ =
-    agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2>();
+  agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> points_;
 
   std::string costmap_frame_;
   std::string vehicle_frame_;
