@@ -201,6 +201,7 @@ CostmapGenerator::CostmapGenerator(const rclcpp::NodeOptions & node_options)
   sub_objects_ = this->create_subscription<autoware_perception_msgs::msg::PredictedObjects>(
     "~/input/objects", 1, std::bind(&CostmapGenerator::onObjects, this, _1));
   sub_points_ = agnocast::create_subscription<sensor_msgs::msg::PointCloud2>(
+    get_node_base_interface(),
     this->get_node_topics_interface()->resolve_topic_name("~/input/points_no_ground"),
     rclcpp::SensorDataQoS(), std::bind(&CostmapGenerator::onPoints, this, _1));
   sub_lanelet_bin_map_ = this->create_subscription<autoware_map_msgs::msg::LaneletMapBin>(

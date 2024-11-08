@@ -165,7 +165,7 @@ void pointcloud_preprocessor::Filter::subscribe(const std::string & filter_name)
         &Filter::input_indices_callback_agnocast, this, std::placeholders::_1,
         PointIndicesConstPtr());
       sub_input_agnocast_ = agnocast::create_subscription<PointCloud2>(
-        this->get_node_topics_interface()->resolve_topic_name("input"),
+        get_node_base_interface(), this->get_node_topics_interface()->resolve_topic_name("input"),
         rclcpp::SensorDataQoS().keep_last(max_queue_size_), cb);
     } else {
       std::function<void(const PointCloud2ConstPtr msg)> cb =
