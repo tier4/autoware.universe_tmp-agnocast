@@ -300,9 +300,6 @@ bool BehaviorVelocityPlannerNode::processData(rclcpp::Clock clock)
   const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> no_ground_pointcloud =
     sub_no_ground_pointcloud_.takeData();
   if (no_ground_pointcloud) {
-    RCLCPP_INFO(
-      get_logger(), "[agnocast debug] subscribed object size: %d",
-      no_ground_pointcloud->data.size());
     processNoGroundPointCloud(no_ground_pointcloud);
   } else {
     logData("pointcloud");

@@ -360,9 +360,6 @@ void OccupancyGridMapOutlierFilterComponent::onOccupancyGridMapAndPointCloud2(
       return;
     }
 
-    RCLCPP_INFO(
-      get_logger(), "[agnocast debug] publishing object size: %d",
-      agnocast_base_link_frame_filtered_pc_ptr->data.size());
     agnocast_pointcloud_pub_->publish(std::move(agnocast_base_link_frame_filtered_pc_ptr));
   }
   if (debugger_ptr_) {

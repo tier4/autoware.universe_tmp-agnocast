@@ -313,19 +313,16 @@ void pointcloud_preprocessor::Filter::input_indices_callback(
 void pointcloud_preprocessor::Filter::input_indices_callback_agnocast(
   const agnocast::ipc_shared_ptr<PointCloud2> cloud, const PointIndicesConstPtr indices)
 {
-  RCLCPP_INFO(
-    this->get_logger(), "[agnocast debug] subscribed object size: %d", cloud->data.size());
-
-  // // If cloud is given, check if it's valid
-  // if (!isValid(cloud)) {
-  //   RCLCPP_ERROR(this->get_logger(), "[input_indices_callback] Invalid input!");
-  //   return;
-  // }
-  // // If indices are given, check if they are valid
-  // if (indices && !isValid(indices)) {
-  //   RCLCPP_ERROR(this->get_logger(), "[input_indices_callback] Invalid indices!");
-  //   return;
-  // }
+  // If cloud is given, check if it's valid
+  if (cloud->width * cloud->height * cloud->point_step != cloud->data.size()) {
+    RCLCPP_ERROR(this->get_logger(), "[input_indices_callback] Invalid input!");
+    return;
+  }
+  // If indices are given, check if they are valid
+  if (indices && !isValid(indices)) {
+    RCLCPP_ERROR(this->get_logger(), "[input_indices_callback] Invalid indices!");
+    return;
+  }
 
   /// DEBUG
   if (indices) {

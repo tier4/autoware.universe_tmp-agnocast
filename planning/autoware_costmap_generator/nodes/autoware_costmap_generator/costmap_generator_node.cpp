@@ -288,7 +288,6 @@ void CostmapGenerator::onObjects(
 
 void CostmapGenerator::onPoints(agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> msg)
 {
-  RCLCPP_INFO(get_logger(), "[agnocast debug] subscribed object size: %d", msg->data.size());
   points_ = std::move(msg);
 }
 

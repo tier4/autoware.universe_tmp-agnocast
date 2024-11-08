@@ -318,9 +318,6 @@ bool AEB::fetchLatestData()
     if (!pointcloud_ptr) {
       return missing("object pointcloud message");
     }
-    RCLCPP_INFO(
-      get_logger(), "[agnocast debug] subscribed object size: %d", pointcloud_ptr->data.size());
-
     onPointCloud(pointcloud_ptr);
     if (!obstacle_ros_pointcloud_ptr_) {
       return missing("object pointcloud");

@@ -155,9 +155,6 @@ bool MotionVelocityPlannerNode::update_planner_data()
   const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> no_ground_pointcloud_ptr =
     sub_no_ground_pointcloud_.takeData();
   if (check_with_log(no_ground_pointcloud_ptr, "Waiting for pointcloud")) {
-    RCLCPP_INFO(
-      get_logger(), "[agnocast debug] subscribed object size: %d",
-      no_ground_pointcloud_ptr->data.size());
     const auto no_ground_pointcloud = process_no_ground_pointcloud(no_ground_pointcloud_ptr);
     if (no_ground_pointcloud) planner_data_.no_ground_pointcloud = *no_ground_pointcloud;
   }
