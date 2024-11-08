@@ -168,6 +168,7 @@ PointCloudConcatenateDataSynchronizerComponent::PointCloudConcatenateDataSynchro
 
       filters_[d].reset();
       filters_[d] = agnocast::create_subscription<sensor_msgs::msg::PointCloud2>(
+        get_node_base_interface(),
         this->get_node_topics_interface()->resolve_topic_name(input_topics_[d]),
         rclcpp::SensorDataQoS().keep_last(maximum_queue_size_), cb);
     }
