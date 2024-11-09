@@ -318,6 +318,7 @@ bool AEB::fetchLatestData()
     if (!pointcloud_ptr) {
       return missing("object pointcloud message");
     }
+
     onPointCloud(pointcloud_ptr);
     if (!obstacle_ros_pointcloud_ptr_) {
       return missing("object pointcloud");

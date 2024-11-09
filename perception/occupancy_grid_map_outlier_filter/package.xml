@@ -40,7 +40,6 @@
   <depend>tf2_ros</depend>
   <depend>tier4_debug_msgs</depend>
   <depend>tier4_pcl_extensions</depend>
-
   <depend>agnocastlib</depend>
 
   <test_depend>ament_lint_auto</test_depend>
