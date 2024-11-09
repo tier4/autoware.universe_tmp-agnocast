@@ -14,10 +14,15 @@
 
 #include "multi_object_tracker/processor/input_manager.hpp"
 
+#include <pthread.h>
+
 #include <cassert>
 
 namespace multi_object_tracker
 {
+
+extern pthread_mutex_t agnocast_mtx;
+
 ///////////////////////////
 /////// InputStream ///////
 ///////////////////////////
@@ -58,8 +63,10 @@ bool InputStream::getTimestamps(
 }
 
 void InputStream::onMessage(
-  const autoware_perception_msgs::msg::DetectedObjects::ConstSharedPtr msg)
+  agnocast::ipc_shared_ptr<autoware_perception_msgs::msg::DetectedObjects> msg)
 {
+  pthread_mutex_lock(&agnocast_mtx);
+
   const DetectedObjects objects = *msg;
   objects_que_.push_back(objects);
   if (objects_que_.size() > que_size_) {
@@ -75,6 +82,8 @@ void InputStream::onMessage(
   if (func_trigger_) {
     func_trigger_(index_);
   }
+
+  pthread_mutex_unlock(&agnocast_mtx);
 }
 
 void InputStream::updateTimingStatus(const rclcpp::Time & now, const rclcpp::Time & objects_time)
@@ -212,10 +221,16 @@ void InputManager::init(const std::vector<InputChannel> & input_channels)
     RCLCPP_INFO(
       node_.get_logger(), "InputManager::init Initializing %s input stream from %s",
       input_channels[i].long_name.c_str(), input_channels[i].input_topic.c_str());
-    std::function<void(const DetectedObjects::ConstSharedPtr msg)> func =
+
+    std::function<void(const agnocast::ipc_shared_ptr<DetectedObjects> msg)> func =
       std::bind(&InputStream::onMessage, input_streams_.at(i), std::placeholders::_1);
-    sub_objects_array_.at(i) = node_.create_subscription<DetectedObjects>(
-      input_channels[i].input_topic, rclcpp::QoS{1}, func);
+
+    sub_objects_ = agnocast::create_subscription<DetectedObjects>(
+      node_.get_node_topics_interface()->resolve_topic_name(input_channels[i].input_topic),
+      rclcpp::QoS{1}, func);
+
+    // sub_objects_array_.at(i) = node_.create_subscription<DetectedObjects>(
+    //   input_channels[i].input_topic, rclcpp::QoS{1}, func);
   }
 
   // Check if any spawn enabled input streams
