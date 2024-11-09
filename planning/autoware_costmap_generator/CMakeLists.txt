@@ -7,6 +7,8 @@ autoware_package()
 find_package(PCL REQUIRED COMPONENTS common io)
 find_package(FLANN REQUIRED)
 
+find_package(agnocastlib REQUIRED)
+
 include_directories(
   include
   SYSTEM
@@ -23,6 +25,11 @@ ament_auto_add_library(costmap_generator_lib SHARED
 target_link_libraries(costmap_generator_lib
   ${PCL_LIBRARIES}
   FLANN::FLANN
+)
+
+ament_target_dependencies(costmap_generator_lib agnocastlib)
+target_include_directories(costmap_generator_lib PRIVATE
+  ${agnocastlib_INCLUDE_DIRS}
 )
 
 if(${PCL_VERSION} GREATER_EQUAL 1.12.1)

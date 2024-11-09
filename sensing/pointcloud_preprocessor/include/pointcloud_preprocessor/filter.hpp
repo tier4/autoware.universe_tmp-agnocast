@@ -80,6 +80,8 @@
 #include <tf2_ros/transform_listener.h>
 
 // Include tier4 autoware utils
+#include "agnocast.hpp"
+
 #include <autoware/universe_utils/ros/debug_publisher.hpp>
 #include <autoware/universe_utils/ros/published_time_publisher.hpp>
 #include <autoware/universe_utils/system/stop_watch.hpp>
@@ -139,6 +141,7 @@ public:
 protected:
   /** \brief The input PointCloud2 subscriber. */
   rclcpp::Subscription<PointCloud2>::SharedPtr sub_input_;
+  agnocast::Subscription<PointCloud2>::SharedPtr sub_input_agnocast_;
 
   /** \brief The output PointCloud2 publisher. */
   rclcpp::Publisher<PointCloud2>::SharedPtr pub_output_;
@@ -270,6 +273,8 @@ protected:
   }
 
 private:
+  bool use_zero_copy_ = false;
+
   /** \brief Parameter service callback result : needed to be hold */
   OnSetParametersCallbackHandle::SharedPtr set_param_res_filter_;
 
@@ -283,6 +288,8 @@ private:
 
   /** \brief PointCloud2 + Indices data callback. */
   void input_indices_callback(const PointCloud2ConstPtr cloud, const PointIndicesConstPtr indices);
+  void input_indices_callback_agnocast(
+    const agnocast::ipc_shared_ptr<PointCloud2> cloud, const PointIndicesConstPtr indices);
 
   /** \brief Get a matrix for conversion from the original frame to the target frame */
   bool calculate_transform_matrix(

@@ -249,7 +249,7 @@ void AEB::onImu(const Imu::ConstSharedPtr input_msg)
   tf2::doTransform(input_msg->angular_velocity, *angular_velocity_ptr_, transform_stamped);
 }
 
-void AEB::onPointCloud(const PointCloud2::ConstSharedPtr input_msg)
+void AEB::onPointCloud(const agnocast::ipc_shared_ptr<PointCloud2> input_msg)
 {
   PointCloud::Ptr pointcloud_ptr(new PointCloud);
   pcl::fromROSMsg(*input_msg, *pointcloud_ptr);
@@ -314,7 +314,7 @@ bool AEB::fetchLatestData()
   }
 
   if (use_pointcloud_data_) {
-    const auto pointcloud_ptr = sub_point_cloud_.takeData();
+    const agnocast::ipc_shared_ptr<PointCloud2> pointcloud_ptr = sub_point_cloud_.takeData();
     if (!pointcloud_ptr) {
       return missing("object pointcloud message");
     }

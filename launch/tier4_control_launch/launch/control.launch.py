@@ -352,6 +352,10 @@ def launch_setup(context, *args, **kwargs):
                 autoware_operation_mode_transition_manager_component,
                 glog_component,
             ],
+            additional_env={
+                'LD_PRELOAD': 'libpreloaded.so',
+                'MEMPOOL_SIZE': '134217728',  # 128MB
+            },
         )
 
     elif trajectory_follower_mode == "smart_mpc_trajectory_follower":
