@@ -80,8 +80,6 @@
 #include <tf2_ros/transform_listener.h>
 
 // Include tier4 autoware utils
-#include "agnocast.hpp"
-
 #include <autoware/universe_utils/ros/debug_publisher.hpp>
 #include <autoware/universe_utils/ros/published_time_publisher.hpp>
 #include <autoware/universe_utils/system/stop_watch.hpp>
