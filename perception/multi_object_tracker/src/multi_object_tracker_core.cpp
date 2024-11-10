@@ -237,7 +237,9 @@ void MultiObjectTracker::onTimer()
   // If the elapsed time is over the period, publish objects with prediction
   constexpr double maximum_latency_ratio = 1.11;  // 11% margin
   const double maximum_publish_latency = publisher_period_ * maximum_latency_ratio;
-  if (elapsed_time < maximum_publish_latency) return;
+  if (elapsed_time < maximum_publish_latency) {
+    return;
+  }
 
   // get objects from the input manager and run process
   ObjectsList objects_list;

@@ -89,7 +89,9 @@ pointcloud_preprocessor::Filter::Filter(
 
   if (this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/top/pointcloud_before_sync" ||
       this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/left/pointcloud_before_sync" ||
-      this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/right/pointcloud_before_sync") {
+      this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/right/pointcloud_before_sync" ||
+      this->get_node_topics_interface()->resolve_topic_name("output") == "/perception/obstacle_segmentation/pointcloud_map_filtered/downsampled/pointcloud")
+  {
     use_zero_copy_ = true;
   }
 
@@ -164,10 +166,19 @@ void pointcloud_preprocessor::Filter::subscribe(const std::string & filter_name)
   } else {
     // Subscribe in an old fashion to input only (no filters)
     // CAN'T use auto-type here.
-    std::function<void(const PointCloud2ConstPtr msg)> cb =
-      std::bind(callback, this, std::placeholders::_1, PointIndicesConstPtr());
-    sub_input_ = create_subscription<PointCloud2>(
-      "input", rclcpp::SensorDataQoS().keep_last(max_queue_size_), cb);
+    if (use_zero_copy_) {
+      std::function<void(const agnocast::ipc_shared_ptr<PointCloud2> msg)> cb = std::bind(
+        &Filter::input_indices_callback_agnocast, this, std::placeholders::_1,
+        PointIndicesConstPtr());
+      sub_input_agnocast_ = agnocast::create_subscription<PointCloud2>(
+        get_node_base_interface(), this->get_node_topics_interface()->resolve_topic_name("input"),
+        rclcpp::SensorDataQoS().keep_last(max_queue_size_), cb);
+    } else {
+      std::function<void(const PointCloud2ConstPtr msg)> cb =
+        std::bind(callback, this, std::placeholders::_1, PointIndicesConstPtr());
+      sub_input_ = create_subscription<PointCloud2>(
+        "input", rclcpp::SensorDataQoS().keep_last(max_queue_size_), cb);
+    }
   }
 }
 
@@ -295,6 +306,80 @@ void pointcloud_preprocessor::Filter::input_indices_callback(
     cloud_tf = std::make_shared<PointCloud2>(cloud_transformed);
   } else {
     cloud_tf = cloud;
+  }
+  // Need setInputCloud () here because we have to extract x/y/z
+  IndicesPtr vindices;
+  if (indices) {
+    vindices.reset(new std::vector<int>(indices->indices));
+  }
+
+  computePublish(cloud_tf, vindices);
+}
+
+void pointcloud_preprocessor::Filter::input_indices_callback_agnocast(
+  const agnocast::ipc_shared_ptr<PointCloud2> cloud, const PointIndicesConstPtr indices)
+{
+  // If cloud is given, check if it's valid
+  if (cloud->width * cloud->height * cloud->point_step != cloud->data.size()) {
+    RCLCPP_ERROR(this->get_logger(), "[input_indices_callback] Invalid input!");
+    return;
+  }
+  // If indices are given, check if they are valid
+  if (indices && !isValid(indices)) {
+    RCLCPP_ERROR(this->get_logger(), "[input_indices_callback] Invalid indices!");
+    return;
+  }
+
+  /// DEBUG
+  if (indices) {
+    RCLCPP_DEBUG(
+      this->get_logger(),
+      "[input_indices_callback]\n"
+      "   - PointCloud with %d data points (%s), stamp %f, and frame %s on input topic received.\n"
+      "   - PointIndices with %zu values, stamp %f, and frame %s on indices topic received.",
+      cloud->width * cloud->height, pcl::getFieldsList(*cloud).c_str(),
+      rclcpp::Time(cloud->header.stamp).seconds(), cloud->header.frame_id.c_str(),
+      indices->indices.size(), rclcpp::Time(indices->header.stamp).seconds(),
+      indices->header.frame_id.c_str());
+  } else {
+    RCLCPP_DEBUG(
+      this->get_logger(),
+      "[input_indices_callback] PointCloud with %d data points and frame %s on input topic "
+      "received.",
+      cloud->width * cloud->height, cloud->header.frame_id.c_str());
+  }
+  ///
+
+  // Check whether the user has given a different input TF frame
+  tf_input_orig_frame_ = cloud->header.frame_id;
+  PointCloud2ConstPtr cloud_tf;
+  if (!tf_input_frame_.empty() && cloud->header.frame_id != tf_input_frame_) {
+    RCLCPP_DEBUG(
+      this->get_logger(), "[input_indices_callback] Transforming input dataset from %s to %s.",
+      cloud->header.frame_id.c_str(), tf_input_frame_.c_str());
+    // Save the original frame ID
+    // Convert the cloud into the different frame
+    PointCloud2 cloud_transformed;
+
+    if (!tf_buffer_->canTransform(
+          tf_input_frame_, cloud->header.frame_id, this->now(),
+          rclcpp::Duration::from_seconds(1.0))) {
+      RCLCPP_ERROR_STREAM(
+        this->get_logger(), "[input_indices_callback] timeout tf: " << cloud->header.frame_id
+                                                                    << "->" << tf_input_frame_);
+      return;
+    }
+
+    if (!pcl_ros::transformPointCloud(tf_input_frame_, *cloud, cloud_transformed, *tf_buffer_)) {
+      RCLCPP_ERROR(
+        this->get_logger(),
+        "[input_indices_callback] Error converting input dataset from %s to %s.",
+        cloud->header.frame_id.c_str(), tf_input_frame_.c_str());
+      return;
+    }
+    cloud_tf = std::make_shared<PointCloud2>(cloud_transformed);
+  } else {
+    cloud_tf = std::make_shared<PointCloud2>(*cloud);  // changed for agnocast
   }
   // Need setInputCloud () here because we have to extract x/y/z
   IndicesPtr vindices;

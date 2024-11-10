@@ -15,6 +15,7 @@
 #ifndef MULTI_OBJECT_TRACKER__PROCESSOR__INPUT_MANAGER_HPP_
 #define MULTI_OBJECT_TRACKER__PROCESSOR__INPUT_MANAGER_HPP_
 
+#include "agnocast.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "autoware_perception_msgs/msg/detected_objects.hpp"
@@ -52,7 +53,7 @@ public:
     func_trigger_ = func_trigger;
   }
 
-  void onMessage(const autoware_perception_msgs::msg::DetectedObjects::ConstSharedPtr msg);
+  void onMessage(const agnocast::ipc_shared_ptr<DetectedObjects> msg);
   void updateTimingStatus(const rclcpp::Time & now, const rclcpp::Time & objects_time);
 
   bool isTimeInitialized() const { return initial_count_ > 0; }
@@ -132,6 +133,8 @@ public:
 private:
   rclcpp::Node & node_;
   std::vector<rclcpp::Subscription<DetectedObjects>::SharedPtr> sub_objects_array_{};
+
+  agnocast::Subscription<DetectedObjects>::SharedPtr sub_objects_;
 
   bool is_initialized_{false};
   rclcpp::Time latest_exported_object_time_;
