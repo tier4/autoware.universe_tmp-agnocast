@@ -89,8 +89,7 @@ pointcloud_preprocessor::Filter::Filter(
 
   if (this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/top/pointcloud_before_sync" ||
       this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/left/pointcloud_before_sync" ||
-      this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/right/pointcloud_before_sync" ||
-      this->get_node_topics_interface()->resolve_topic_name("output") == "/perception/obstacle_segmentation/pointcloud")
+      this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/right/pointcloud_before_sync")
   {
     use_zero_copy_publish_ = true;
   }
