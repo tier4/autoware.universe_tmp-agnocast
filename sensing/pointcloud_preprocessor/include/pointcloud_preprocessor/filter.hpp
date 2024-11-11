@@ -302,7 +302,6 @@ private:
     const std::string & target_frame, const sensor_msgs::msg::PointCloud2 & from,
     const tf2_ros::Buffer & tf_buffer, Eigen::Matrix4f & eigen_transform /*output*/);
 
-  bool convert_output_costly(std::unique_ptr<PointCloud2> & output);
   bool convert_output_costly(PointCloud2 & output);
 
   // TODO(sykwer): Temporary Implementation: Remove this interface when all the filter nodes conform

@@ -213,7 +213,7 @@ void pointcloud_preprocessor::Filter::computePublish(
   // Call the virtual method in the child
   filter(input, indices, *output);
 
-  if (!convert_output_costly(output)) return;
+  if (!convert_output_costly(*output)) return;
 
   // Copy timestamp to keep it
   output->header.stamp = input->header.stamp;
@@ -457,6 +457,7 @@ bool pointcloud_preprocessor::Filter::calculate_transform_matrix(
   return true;
 }
 
+// Returns false in error cases
 bool pointcloud_preprocessor::Filter::convert_output_costly(PointCloud2 & output)
 {
   // In terms of performance, we should avoid using pcl_ros library function,
@@ -497,52 +498,6 @@ bool pointcloud_preprocessor::Filter::convert_output_costly(PointCloud2 & output
     }
 
     output = *cloud_transformed;
-  }
-
-  return true;
-}
-
-// Returns false in error cases
-bool pointcloud_preprocessor::Filter::convert_output_costly(std::unique_ptr<PointCloud2> & output)
-{
-  // In terms of performance, we should avoid using pcl_ros library function,
-  // but this code path isn't reached in the main use case of Autoware, so it's left as is for now.
-  if (!tf_output_frame_.empty() && output->header.frame_id != tf_output_frame_) {
-    RCLCPP_DEBUG(
-      this->get_logger(), "[convert_output_costly] Transforming output dataset from %s to %s.",
-      output->header.frame_id.c_str(), tf_output_frame_.c_str());
-
-    // Convert the cloud into the different frame
-    auto cloud_transformed = std::make_unique<PointCloud2>();
-    if (!pcl_ros::transformPointCloud(tf_output_frame_, *output, *cloud_transformed, *tf_buffer_)) {
-      RCLCPP_ERROR(
-        this->get_logger(),
-        "[convert_output_costly] Error converting output dataset from %s to %s.",
-        output->header.frame_id.c_str(), tf_output_frame_.c_str());
-      return false;
-    }
-
-    output = std::move(cloud_transformed);
-  }
-
-  // Same as the comment above
-  if (tf_output_frame_.empty() && output->header.frame_id != tf_input_orig_frame_) {
-    // No tf_output_frame given, transform the dataset to its original frame
-    RCLCPP_DEBUG(
-      this->get_logger(), "[convert_output_costly] Transforming output dataset from %s back to %s.",
-      output->header.frame_id.c_str(), tf_input_orig_frame_.c_str());
-
-    auto cloud_transformed = std::make_unique<PointCloud2>();
-    if (!pcl_ros::transformPointCloud(
-          tf_input_orig_frame_, *output, *cloud_transformed, *tf_buffer_)) {
-      RCLCPP_ERROR(
-        this->get_logger(),
-        "[convert_output_costly] Error converting output dataset from %s back to %s.",
-        output->header.frame_id.c_str(), tf_input_orig_frame_.c_str());
-      return false;
-    }
-
-    output = std::move(cloud_transformed);
   }
 
   return true;
@@ -605,7 +560,7 @@ void pointcloud_preprocessor::Filter::faster_input_indices_callback(
     auto output = std::make_unique<PointCloud2>();
     // TODO(sykwer): Change to `filter()` call after when the filter nodes conform to new API.
     faster_filter(cloud, vindices, *output, transform_info);
-    if (!convert_output_costly(output)) return;
+    if (!convert_output_costly(*output)) return;
     output->header.stamp = cloud->header.stamp;
     pub_output_->publish(std::move(output));
     published_time_publisher_->publish_if_subscribed(pub_output_, cloud->header.stamp);
