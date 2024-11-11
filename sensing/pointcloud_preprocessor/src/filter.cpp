@@ -90,14 +90,19 @@ pointcloud_preprocessor::Filter::Filter(
   if (this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/top/pointcloud_before_sync" ||
       this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/left/pointcloud_before_sync" ||
       this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/right/pointcloud_before_sync" ||
-      this->get_node_topics_interface()->resolve_topic_name("output") == "/perception/obstacle_segmentation/pointcloud_map_filtered/downsampled/pointcloud")
+      this->get_node_topics_interface()->resolve_topic_name("output") == "/perception/obstacle_segmentation/pointcloud")
   {
-    use_zero_copy_ = true;
+    use_zero_copy_publish_ = true;
+  }
+
+  if (this->get_node_topics_interface()->resolve_topic_name("input") == "/perception/obstacle_segmentation/pointcloud")
+  {
+    use_zero_copy_subscribe_ = true;
   }
 
   // Set publisher
   {
-    if (use_zero_copy_) {
+    if (use_zero_copy_publish_) {
       pub_output_agnocast_ = agnocast::create_publisher<PointCloud2>(
         this->get_node_topics_interface()->resolve_topic_name("output"), rclcpp::SensorDataQoS().keep_last(max_queue_size_));
     } else {
@@ -166,7 +171,7 @@ void pointcloud_preprocessor::Filter::subscribe(const std::string & filter_name)
   } else {
     // Subscribe in an old fashion to input only (no filters)
     // CAN'T use auto-type here.
-    if (use_zero_copy_) {
+    if (use_zero_copy_subscribe_) {
       std::function<void(const agnocast::ipc_shared_ptr<PointCloud2> msg)> cb = std::bind(
         &Filter::input_indices_callback_agnocast, this, std::placeholders::_1,
         PointIndicesConstPtr());
@@ -591,7 +596,7 @@ void pointcloud_preprocessor::Filter::faster_input_indices_callback(
     vindices.reset(new std::vector<int>(indices->indices));
   }
 
-  if (use_zero_copy_) {
+  if (use_zero_copy_publish_) {
     agnocast::ipc_shared_ptr<PointCloud2> output = pub_output_agnocast_->borrow_loaned_message();
     faster_filter(cloud, vindices, *output, transform_info);
     if (!convert_output_costly(*output)) return;

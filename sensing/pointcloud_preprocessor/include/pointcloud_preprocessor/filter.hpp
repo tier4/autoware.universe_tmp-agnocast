@@ -274,7 +274,8 @@ protected:
   }
 
 private:
-  bool use_zero_copy_ = false;
+  bool use_zero_copy_publish_ = false;
+  bool use_zero_copy_subscribe_ = false;
 
   /** \brief Parameter service callback result : needed to be hold */
   OnSetParametersCallbackHandle::SharedPtr set_param_res_filter_;
