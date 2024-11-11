@@ -80,11 +80,11 @@
 #include <tf2_ros/transform_listener.h>
 
 // Include tier4 autoware utils
-#include "agnocast.hpp"
-
 #include <autoware/universe_utils/ros/debug_publisher.hpp>
 #include <autoware/universe_utils/ros/published_time_publisher.hpp>
 #include <autoware/universe_utils/system/stop_watch.hpp>
+
+#include "agnocast.hpp"
 
 namespace pointcloud_preprocessor
 {
@@ -145,6 +145,7 @@ protected:
 
   /** \brief The output PointCloud2 publisher. */
   rclcpp::Publisher<PointCloud2>::SharedPtr pub_output_;
+  std::shared_ptr<agnocast::Publisher<PointCloud2>> pub_output_agnocast_;
 
   /** \brief The message filter subscriber for PointCloud2. */
   message_filters::Subscriber<PointCloud2> sub_input_filter_;
@@ -273,7 +274,8 @@ protected:
   }
 
 private:
-  bool use_zero_copy_ = false;
+  bool use_agnocast_publish_ = false;
+  bool use_agnocast_subscribe_ = false;
 
   /** \brief Parameter service callback result : needed to be hold */
   OnSetParametersCallbackHandle::SharedPtr set_param_res_filter_;
@@ -300,7 +302,7 @@ private:
     const std::string & target_frame, const sensor_msgs::msg::PointCloud2 & from,
     const tf2_ros::Buffer & tf_buffer, Eigen::Matrix4f & eigen_transform /*output*/);
 
-  bool convert_output_costly(std::unique_ptr<PointCloud2> & output);
+  bool convert_output_costly(PointCloud2 & output);
 
   // TODO(sykwer): Temporary Implementation: Remove this interface when all the filter nodes conform
   // to new API.

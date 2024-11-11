@@ -162,13 +162,15 @@ PointCloudConcatenateDataSynchronizerComponent::PointCloudConcatenateDataSynchro
       cloud_stdmap_tmp_ = cloud_stdmap_;
 
       // CAN'T use auto type here.
-      std::function<void(const sensor_msgs::msg::PointCloud2::ConstSharedPtr msg)> cb = std::bind(
+      std::function<void(const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> msg)> cb = std::bind(
         &PointCloudConcatenateDataSynchronizerComponent::cloud_callback, this,
         std::placeholders::_1, input_topics_[d]);
 
       filters_[d].reset();
-      filters_[d] = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        input_topics_[d], rclcpp::SensorDataQoS().keep_last(maximum_queue_size_), cb);
+      filters_[d] = agnocast::create_subscription<sensor_msgs::msg::PointCloud2>(
+        get_node_base_interface(),
+        this->get_node_topics_interface()->resolve_topic_name(input_topics_[d]),
+        rclcpp::SensorDataQoS().keep_last(maximum_queue_size_), cb);
     }
 
     if (input_twist_topic_type_ == "twist") {
@@ -542,7 +544,7 @@ void PointCloudConcatenateDataSynchronizerComponent::setPeriod(const int64_t new
 }
 
 void PointCloudConcatenateDataSynchronizerComponent::cloud_callback(
-  const sensor_msgs::msg::PointCloud2::ConstSharedPtr & input_ptr, const std::string & topic_name)
+  const agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> input_ptr, const std::string & topic_name)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   sensor_msgs::msg::PointCloud2::SharedPtr xyzi_input_ptr(new sensor_msgs::msg::PointCloud2());

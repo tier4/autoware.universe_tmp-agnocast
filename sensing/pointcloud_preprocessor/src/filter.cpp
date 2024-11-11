@@ -87,17 +87,27 @@ pointcloud_preprocessor::Filter::Filter(
         << " - max_queue_size   : " << max_queue_size_);
   }
 
-  // For /perception/object_recognition/detection/voxel_grid_downsample_filter
-  if (
-    this->get_node_topics_interface()->resolve_topic_name("output") ==
-    "/perception/obstacle_segmentation/pointcloud_map_filtered/downsampled/pointcloud") {
-    use_zero_copy_ = true;
+  if (this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/top/pointcloud_before_sync" ||
+      this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/left/pointcloud_before_sync" ||
+      this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/right/pointcloud_before_sync")
+  {
+    use_agnocast_publish_ = true;
+  }
+
+  if (this->get_node_topics_interface()->resolve_topic_name("input") == "/perception/obstacle_segmentation/pointcloud")
+  {
+    use_agnocast_subscribe_ = true;
   }
 
   // Set publisher
   {
-    pub_output_ = this->create_publisher<PointCloud2>(
-      "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));
+    if (use_agnocast_publish_) {
+      pub_output_agnocast_ = agnocast::create_publisher<PointCloud2>(
+        this->get_node_topics_interface()->resolve_topic_name("output"), rclcpp::SensorDataQoS().keep_last(max_queue_size_));
+    } else {
+      pub_output_ = this->create_publisher<PointCloud2>(
+        "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));
+    }
   }
 
   subscribe(filter_name);
@@ -160,7 +170,7 @@ void pointcloud_preprocessor::Filter::subscribe(const std::string & filter_name)
   } else {
     // Subscribe in an old fashion to input only (no filters)
     // CAN'T use auto-type here.
-    if (use_zero_copy_) {
+    if (use_agnocast_subscribe_) {
       std::function<void(const agnocast::ipc_shared_ptr<PointCloud2> msg)> cb = std::bind(
         &Filter::input_indices_callback_agnocast, this, std::placeholders::_1,
         PointIndicesConstPtr());
@@ -203,7 +213,7 @@ void pointcloud_preprocessor::Filter::computePublish(
   // Call the virtual method in the child
   filter(input, indices, *output);
 
-  if (!convert_output_costly(output)) return;
+  if (!convert_output_costly(*output)) return;
 
   // Copy timestamp to keep it
   output->header.stamp = input->header.stamp;
@@ -448,46 +458,46 @@ bool pointcloud_preprocessor::Filter::calculate_transform_matrix(
 }
 
 // Returns false in error cases
-bool pointcloud_preprocessor::Filter::convert_output_costly(std::unique_ptr<PointCloud2> & output)
+bool pointcloud_preprocessor::Filter::convert_output_costly(PointCloud2 & output)
 {
   // In terms of performance, we should avoid using pcl_ros library function,
   // but this code path isn't reached in the main use case of Autoware, so it's left as is for now.
-  if (!tf_output_frame_.empty() && output->header.frame_id != tf_output_frame_) {
+  if (!tf_output_frame_.empty() && output.header.frame_id != tf_output_frame_) {
     RCLCPP_DEBUG(
       this->get_logger(), "[convert_output_costly] Transforming output dataset from %s to %s.",
-      output->header.frame_id.c_str(), tf_output_frame_.c_str());
+      output.header.frame_id.c_str(), tf_output_frame_.c_str());
 
     // Convert the cloud into the different frame
     auto cloud_transformed = std::make_unique<PointCloud2>();
-    if (!pcl_ros::transformPointCloud(tf_output_frame_, *output, *cloud_transformed, *tf_buffer_)) {
+    if (!pcl_ros::transformPointCloud(tf_output_frame_, output, *cloud_transformed, *tf_buffer_)) {
       RCLCPP_ERROR(
         this->get_logger(),
         "[convert_output_costly] Error converting output dataset from %s to %s.",
-        output->header.frame_id.c_str(), tf_output_frame_.c_str());
+        output.header.frame_id.c_str(), tf_output_frame_.c_str());
       return false;
     }
 
-    output = std::move(cloud_transformed);
+    output = *cloud_transformed;
   }
 
   // Same as the comment above
-  if (tf_output_frame_.empty() && output->header.frame_id != tf_input_orig_frame_) {
+  if (tf_output_frame_.empty() && output.header.frame_id != tf_input_orig_frame_) {
     // No tf_output_frame given, transform the dataset to its original frame
     RCLCPP_DEBUG(
       this->get_logger(), "[convert_output_costly] Transforming output dataset from %s back to %s.",
-      output->header.frame_id.c_str(), tf_input_orig_frame_.c_str());
+      output.header.frame_id.c_str(), tf_input_orig_frame_.c_str());
 
     auto cloud_transformed = std::make_unique<PointCloud2>();
     if (!pcl_ros::transformPointCloud(
-          tf_input_orig_frame_, *output, *cloud_transformed, *tf_buffer_)) {
+          tf_input_orig_frame_, output, *cloud_transformed, *tf_buffer_)) {
       RCLCPP_ERROR(
         this->get_logger(),
         "[convert_output_costly] Error converting output dataset from %s back to %s.",
-        output->header.frame_id.c_str(), tf_input_orig_frame_.c_str());
+        output.header.frame_id.c_str(), tf_input_orig_frame_.c_str());
       return false;
     }
 
-    output = std::move(cloud_transformed);
+    output = *cloud_transformed;
   }
 
   return true;
@@ -540,16 +550,21 @@ void pointcloud_preprocessor::Filter::faster_input_indices_callback(
     vindices.reset(new std::vector<int>(indices->indices));
   }
 
-  auto output = std::make_unique<PointCloud2>();
-
-  // TODO(sykwer): Change to `filter()` call after when the filter nodes conform to new API.
-  faster_filter(cloud, vindices, *output, transform_info);
-
-  if (!convert_output_costly(output)) return;
-
-  output->header.stamp = cloud->header.stamp;
-  pub_output_->publish(std::move(output));
-  published_time_publisher_->publish_if_subscribed(pub_output_, cloud->header.stamp);
+  if (use_agnocast_publish_) {
+    agnocast::ipc_shared_ptr<PointCloud2> output = pub_output_agnocast_->borrow_loaned_message();
+    faster_filter(cloud, vindices, *output, transform_info);
+    if (!convert_output_costly(*output)) return;
+    output->header.stamp = cloud->header.stamp;
+    pub_output_agnocast_->publish(std::move(output));
+  } else {
+    auto output = std::make_unique<PointCloud2>();
+    // TODO(sykwer): Change to `filter()` call after when the filter nodes conform to new API.
+    faster_filter(cloud, vindices, *output, transform_info);
+    if (!convert_output_costly(*output)) return;
+    output->header.stamp = cloud->header.stamp;
+    pub_output_->publish(std::move(output));
+    published_time_publisher_->publish_if_subscribed(pub_output_, cloud->header.stamp);
+  }
 }
 
 // TODO(sykwer): Temporary Implementation: Remove this interface when all the filter nodes conform
