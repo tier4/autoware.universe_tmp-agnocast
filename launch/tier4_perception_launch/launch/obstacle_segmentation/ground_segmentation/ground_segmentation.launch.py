@@ -21,7 +21,6 @@ from launch.conditions import IfCondition
 from launch.conditions import UnlessCondition
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PathJoinSubstitution
-from launch_ros.actions import ComposableNodeContainer
 from launch_ros.actions import LoadComposableNodes
 from launch_ros.descriptions import ComposableNode
 from launch_ros.substitutions import FindPackageShare
@@ -521,35 +520,21 @@ def launch_setup(context, *args, **kwargs):
                 context=context,
             )
         )
-
-    pointcloud_container_loader = LoadComposableNodes(
-        composable_node_descriptions=components,
-        target_container=LaunchConfiguration("pointcloud_container_name"),
-    )
-
-    # For agnocast, occupancy_grid_map_outlier_filter is launched in a single container
     if pipeline.use_time_series_filter:
-        occupancy_container = ComposableNodeContainer(
-            name='occupancy_grid_map_outlier_filter_container',
-            namespace='',
-            package='rclcpp_components',
-            executable='component_container_mt',
-            composable_node_descriptions=pipeline.create_time_series_outlier_filter_components(
+        components.extend(
+            pipeline.create_time_series_outlier_filter_components(
                 input_topic=(
                     relay_topic
                     if pipeline.use_single_frame_filter
                     else pipeline.single_frame_obstacle_seg_output
                 ),
                 output_topic=pipeline.output_topic,
-            ),
-            output='screen',
-            additional_env={
-                'LD_PRELOAD': 'libpreloaded.so',
-                'MEMPOOL_SIZE': '134217728',  # 128MB
-            },
+            )
         )
-        return [pointcloud_container_loader, occupancy_container]
-
+    pointcloud_container_loader = LoadComposableNodes(
+        composable_node_descriptions=components,
+        target_container=LaunchConfiguration("pointcloud_container_name"),
+    )
     return [pointcloud_container_loader]
 
 
