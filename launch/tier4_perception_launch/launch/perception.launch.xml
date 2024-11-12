@@ -138,7 +138,7 @@
   <node_container pkg="agnocastlib" exec="agnocast_component_container_mt" name="$(var voxel_euclidean_container_name)" namespace="" output="screen">
     <!-- agnocast -->
     <env name="LD_PRELOAD" value="libpreloaded.so"/>
-    <env name="MEMPOOL_SIZE" value="134217728" />  <!-- 128MB-->
+    <env name="MEMPOOL_SIZE" value="2147483648" />  <!-- 2048MB-->
   </node_container>
 
   <!-- Perception module -->
