@@ -353,7 +353,7 @@ def launch_setup(context, *args, **kwargs):
                 glog_component,
             ],
             additional_env={
-                'LD_PRELOAD': 'libpreloaded.so',
+                'LD_PRELOAD': 'libagnocast_heaphook.so',
                 'MEMPOOL_SIZE': '134217728',  # 128MB
             },
         )
