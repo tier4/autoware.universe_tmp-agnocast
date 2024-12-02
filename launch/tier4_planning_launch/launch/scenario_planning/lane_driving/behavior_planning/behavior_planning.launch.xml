@@ -256,7 +256,7 @@
 
     <composable_node pkg="glog_component" plugin="GlogComponent" name="glog_component" namespace=""/>
     <!-- agnocast -->
-    <env name="LD_PRELOAD" value="libagnocast_heaphook.so"/>
+    <env name="LD_PRELOAD" value="libagnocast_heaphook.so:$(env LD_PRELOAD '')" />
     <env name="MEMPOOL_SIZE" value="134217728" /> <!-- 128MB -->
   </node_container>
 

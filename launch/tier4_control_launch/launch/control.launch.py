@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import launch
 from launch.actions import DeclareLaunchArgument
 from launch.actions import GroupAction
@@ -353,7 +355,7 @@ def launch_setup(context, *args, **kwargs):
                 glog_component,
             ],
             additional_env={
-                'LD_PRELOAD': 'libagnocast_heaphook.so',
+                'LD_PRELOAD': f"libagnocast_heaphook.so:{os.getenv('LD_PRELOAD', '')}",
                 'MEMPOOL_SIZE': '134217728',  # 128MB
             },
         )
