@@ -120,17 +120,19 @@ void ObjectLaneletFilterNode::objectCallback(
       *output_object_msg);
   }
 
+  // Be careful not to reference objects after moving
+  const double pipeline_latency =
+    std::chrono::duration<double, std::milli>(
+      std::chrono::nanoseconds(
+        (this->get_clock()->now() - output_object_msg->header.stamp).nanoseconds()))
+      .count();
+
   object_pub_->publish(std::move(output_object_msg));
 
   // TODO(Agnocast): solve https://github.com/tier4/agnocast/issues/164
   // published_time_publisher_->publish_if_subscribed(object_pub_, output_object_msg.header.stamp);
 
   // Publish debug info
-  const double pipeline_latency =
-    std::chrono::duration<double, std::milli>(
-      std::chrono::nanoseconds(
-        (this->get_clock()->now() - output_object_msg->header.stamp).nanoseconds()))
-      .count();
   debug_publisher_->publish<tier4_debug_msgs::msg::Float64Stamped>(
     "debug/pipeline_latency_ms", pipeline_latency);
 }
