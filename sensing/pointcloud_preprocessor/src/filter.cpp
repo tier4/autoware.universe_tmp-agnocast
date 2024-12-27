@@ -87,15 +87,19 @@ pointcloud_preprocessor::Filter::Filter(
         << " - max_queue_size   : " << max_queue_size_);
   }
 
-  if (this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/top/pointcloud_before_sync" ||
-      this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/left/pointcloud_before_sync" ||
-      this->get_node_topics_interface()->resolve_topic_name("output") == "/sensing/lidar/right/pointcloud_before_sync")
-  {
+  if (
+    this->get_node_topics_interface()->resolve_topic_name("output") ==
+      "/sensing/lidar/top/pointcloud_before_sync" ||
+    this->get_node_topics_interface()->resolve_topic_name("output") ==
+      "/sensing/lidar/left/pointcloud_before_sync" ||
+    this->get_node_topics_interface()->resolve_topic_name("output") ==
+      "/sensing/lidar/right/pointcloud_before_sync") {
     use_agnocast_publish_ = true;
   }
 
-  if (this->get_node_topics_interface()->resolve_topic_name("input") == "/perception/obstacle_segmentation/pointcloud")
-  {
+  if (
+    this->get_node_topics_interface()->resolve_topic_name("input") ==
+    "/perception/obstacle_segmentation/pointcloud") {
     use_agnocast_subscribe_ = true;
   }
 
@@ -103,7 +107,9 @@ pointcloud_preprocessor::Filter::Filter(
   {
     if (use_agnocast_publish_) {
       pub_output_agnocast_ = agnocast::create_publisher<PointCloud2>(
-        this->get_node_topics_interface()->resolve_topic_name("output"), rclcpp::SensorDataQoS().keep_last(max_queue_size_));
+        this->get_node_base_interface(),
+        this->get_node_topics_interface()->resolve_topic_name("output"),
+        rclcpp::SensorDataQoS().keep_last(max_queue_size_));
     } else {
       pub_output_ = this->create_publisher<PointCloud2>(
         "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));

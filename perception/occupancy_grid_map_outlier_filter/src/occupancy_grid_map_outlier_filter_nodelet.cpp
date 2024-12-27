@@ -253,6 +253,7 @@ OccupancyGridMapOutlierFilterComponent::OccupancyGridMapOutlierFilterComponent(
     &OccupancyGridMapOutlierFilterComponent::onOccupancyGridMapAndPointCloud2, this,
     std::placeholders::_1, std::placeholders::_2));
   pointcloud_pub_ = agnocast::create_publisher<PointCloud2>(
+    this->get_node_base_interface(),
     this->get_node_topics_interface()->resolve_topic_name("~/output/pointcloud"),
     rclcpp::SensorDataQoS());
 
