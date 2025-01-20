@@ -90,6 +90,14 @@ TopicStateMonitorNode::TopicStateMonitorNode(const rclcpp::NodeOptions & node_op
         }
       });
   } else {
+    if (node_param_.topic == "/perception/obstacle_segmentation/pointcloud") {
+      sub_topic_agnocast_ = agnocast::create_subscription<sensor_msgs::msg::PointCloud2>(
+        this, node_param_.topic, qos,
+        [this]([[maybe_unused]] agnocast::ipc_shared_ptr<sensor_msgs::msg::PointCloud2> msg) {
+          topic_state_monitor_->update();
+        });
+    }
+
     sub_topic_ = this->create_generic_subscription(
       node_param_.topic, node_param_.topic_type, qos,
       [this]([[maybe_unused]] std::shared_ptr<rclcpp::SerializedMessage> msg) {

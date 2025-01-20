@@ -15,11 +15,13 @@
 #ifndef TOPIC_STATE_MONITOR__TOPIC_STATE_MONITOR_CORE_HPP_
 #define TOPIC_STATE_MONITOR__TOPIC_STATE_MONITOR_CORE_HPP_
 
+#include "agnocast.hpp"
 #include "topic_state_monitor/topic_state_monitor.hpp"
 
 #include <diagnostic_updater/diagnostic_updater.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <sensor_msgs/msg/point_cloud2.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
 #include <deque>
@@ -64,6 +66,8 @@ private:
   // Subscriber
   rclcpp::GenericSubscription::SharedPtr sub_topic_;
   rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr sub_transform_;
+  // For /perception/obstacle_segmentation/pointcloud topic.
+  agnocast::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_topic_agnocast_;
 
   // Timer
   void onTimer();
