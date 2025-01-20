@@ -61,10 +61,7 @@ ObjectLaneletFilterNode::ObjectLaneletFilterNode(const rclcpp::NodeOptions & nod
     "input/object", rclcpp::QoS{1}, std::bind(&ObjectLaneletFilterNode::objectCallback, this, _1));
 
   object_pub_ = agnocast::create_publisher<autoware_perception_msgs::msg::DetectedObjects>(
-    this->get_node_base_interface(),
-    this->get_node_topics_interface()->resolve_topic_name("output/object"), rclcpp::QoS{1});
-  // object_pub_ = this->create_publisher<autoware_perception_msgs::msg::DetectedObjects>(
-  //   "output/object", rclcpp::QoS{1});
+    this, "output/object", rclcpp::QoS{1});
 
   debug_publisher_ =
     std::make_unique<autoware::universe_utils::DebugPublisher>(this, "object_lanelet_filter");
