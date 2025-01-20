@@ -107,9 +107,7 @@ pointcloud_preprocessor::Filter::Filter(
   {
     if (use_agnocast_publish_) {
       pub_output_agnocast_ = agnocast::create_publisher<PointCloud2>(
-        this->get_node_base_interface(),
-        this->get_node_topics_interface()->resolve_topic_name("output"),
-        rclcpp::SensorDataQoS().keep_last(max_queue_size_));
+        this, "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));
     } else {
       pub_output_ = this->create_publisher<PointCloud2>(
         "output", rclcpp::SensorDataQoS().keep_last(max_queue_size_));
@@ -181,8 +179,7 @@ void pointcloud_preprocessor::Filter::subscribe(const std::string & filter_name)
         &Filter::input_indices_callback_agnocast, this, std::placeholders::_1,
         PointIndicesConstPtr());
       sub_input_agnocast_ = agnocast::create_subscription<PointCloud2>(
-        get_node_base_interface(), this->get_node_topics_interface()->resolve_topic_name("input"),
-        rclcpp::SensorDataQoS().keep_last(max_queue_size_), cb);
+        this, "input", rclcpp::SensorDataQoS().keep_last(max_queue_size_), cb);
     } else {
       std::function<void(const PointCloud2ConstPtr msg)> cb =
         std::bind(callback, this, std::placeholders::_1, PointIndicesConstPtr());

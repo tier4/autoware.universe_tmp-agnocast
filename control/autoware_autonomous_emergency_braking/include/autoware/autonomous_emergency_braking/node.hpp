@@ -249,8 +249,7 @@ public:
   explicit AEB(const rclcpp::NodeOptions & node_options);
 
   // subscriber
-  agnocast::PollingSubscriber<PointCloud2> sub_point_cloud_{
-    this->get_node_topics_interface()->resolve_topic_name("~/input/pointcloud")};
+  agnocast::PollingSubscriber<PointCloud2> sub_point_cloud_{this, "~/input/pointcloud"};
   autoware::universe_utils::InterProcessPollingSubscriber<VelocityReport> sub_velocity_{
     this, "~/input/velocity"};
   autoware::universe_utils::InterProcessPollingSubscriber<Imu> sub_imu_{this, "~/input/imu"};

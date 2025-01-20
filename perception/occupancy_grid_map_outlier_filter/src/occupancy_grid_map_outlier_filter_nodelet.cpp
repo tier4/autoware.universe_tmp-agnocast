@@ -252,10 +252,8 @@ OccupancyGridMapOutlierFilterComponent::OccupancyGridMapOutlierFilterComponent(
   sync_ptr_->registerCallback(std::bind(
     &OccupancyGridMapOutlierFilterComponent::onOccupancyGridMapAndPointCloud2, this,
     std::placeholders::_1, std::placeholders::_2));
-  pointcloud_pub_ = agnocast::create_publisher<PointCloud2>(
-    this->get_node_base_interface(),
-    this->get_node_topics_interface()->resolve_topic_name("~/output/pointcloud"),
-    rclcpp::SensorDataQoS());
+  pointcloud_pub_ =
+    agnocast::create_publisher<PointCloud2>(this, "~/output/pointcloud", rclcpp::SensorDataQoS());
 
   /* Radius search 2d filter */
   if (use_radius_search_2d_filter) {

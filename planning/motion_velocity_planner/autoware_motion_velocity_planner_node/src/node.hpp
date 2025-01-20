@@ -68,7 +68,7 @@ private:
     autoware_perception_msgs::msg::PredictedObjects>
     sub_predicted_objects_{this, "~/input/dynamic_objects"};
   agnocast::PollingSubscriber<sensor_msgs::msg::PointCloud2> sub_no_ground_pointcloud_{
-    this->get_node_topics_interface()->resolve_topic_name("~/input/no_ground_pointcloud")};
+    this, "~/input/no_ground_pointcloud"};
   autoware::universe_utils::InterProcessPollingSubscriber<nav_msgs::msg::Odometry>
     sub_vehicle_odometry_{this, "~/input/vehicle_odometry"};
   autoware::universe_utils::InterProcessPollingSubscriber<
