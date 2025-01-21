@@ -17,6 +17,8 @@ find_package(Eigen3 REQUIRED)
 ### Find Boost Dependencies
 find_package(Boost REQUIRED)
 
+find_package(agnocastlib REQUIRED)
+
 include_directories(
   include
   SYSTEM
@@ -58,6 +60,11 @@ target_link_libraries(obstacle_pointcloud_based_validator
 ament_auto_add_library(object_lanelet_filter SHARED
   src/object_lanelet_filter.cpp
   src/utils.cpp
+)
+
+ament_target_dependencies(object_lanelet_filter agnocastlib)
+target_include_directories(object_lanelet_filter PRIVATE
+  ${agnocastlib_INCLUDE_DIRS}
 )
 
 ament_auto_add_library(object_position_filter SHARED

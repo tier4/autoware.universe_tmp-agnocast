@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import launch
 from launch.actions import DeclareLaunchArgument
 from launch.actions import GroupAction
@@ -352,6 +354,10 @@ def launch_setup(context, *args, **kwargs):
                 autoware_operation_mode_transition_manager_component,
                 glog_component,
             ],
+            additional_env={
+                'LD_PRELOAD': f"libagnocast_heaphook.so:{os.getenv('LD_PRELOAD', '')}",
+                'MEMPOOL_SIZE': '134217728',  # 128MB
+            },
         )
 
     elif trajectory_follower_mode == "smart_mpc_trajectory_follower":

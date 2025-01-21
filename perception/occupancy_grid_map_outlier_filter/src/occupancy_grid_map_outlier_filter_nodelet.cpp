@@ -252,7 +252,8 @@ OccupancyGridMapOutlierFilterComponent::OccupancyGridMapOutlierFilterComponent(
   sync_ptr_->registerCallback(std::bind(
     &OccupancyGridMapOutlierFilterComponent::onOccupancyGridMapAndPointCloud2, this,
     std::placeholders::_1, std::placeholders::_2));
-  pointcloud_pub_ = create_publisher<PointCloud2>("~/output/pointcloud", rclcpp::SensorDataQoS());
+  pointcloud_pub_ =
+    agnocast::create_publisher<PointCloud2>(this, "~/output/pointcloud", rclcpp::SensorDataQoS());
 
   /* Radius search 2d filter */
   if (use_radius_search_2d_filter) {
@@ -349,12 +350,14 @@ void OccupancyGridMapOutlierFilterComponent::onOccupancyGridMapAndPointCloud2(
   concatPointCloud2(ogm_frame_filtered_pc, ogm_frame_input_behind_pc);
   finalizePointCloud2(ogm_frame_pc, ogm_frame_filtered_pc);
   {
-    auto base_link_frame_filtered_pc_ptr = std::make_unique<PointCloud2>();
+    agnocast::ipc_shared_ptr<PointCloud2> base_link_frame_filtered_pc_ptr =
+      pointcloud_pub_->borrow_loaned_message();
     ogm_frame_filtered_pc.header = ogm_frame_pc.header;
     if (!transformPointcloud(
           ogm_frame_filtered_pc, *tf2_, base_link_frame_, *base_link_frame_filtered_pc_ptr)) {
       return;
     }
+
     pointcloud_pub_->publish(std::move(base_link_frame_filtered_pc_ptr));
   }
   if (debugger_ptr_) {
