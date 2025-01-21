@@ -10,15 +10,21 @@
   <arg name="timeout" description="timeout period[s]"/>
   <arg name="window_size" default="10" description="window size"/>
 
-  <node pkg="topic_state_monitor" exec="topic_state_monitor_node" name="topic_state_monitor_$(var node_name_suffix)" output="screen">
-    <param name="topic" value="$(var topic)"/>
-    <param name="topic_type" value="$(var topic_type)"/>
-    <param name="transient_local" value="$(var transient_local)"/>
-    <param name="best_effort" value="$(var best_effort)"/>
-    <param name="diag_name" value="$(var diag_name)"/>
-    <param name="warn_rate" value="$(var warn_rate)"/>
-    <param name="error_rate" value="$(var error_rate)"/>
-    <param name="timeout" value="$(var timeout)"/>
-    <param name="window_size" value="$(var window_size)"/>
-  </node>
+  <node_container pkg="agnocastlib" exec="agnocast_component_container" name="topic_state_monitor_$(var node_name_suffix)_container" namespace="" output="screen">
+    <!-- agnocast -->
+    <env name="LD_PRELOAD" value="libagnocast_heaphook.so:$(env LD_PRELOAD '')" />
+    <env name="MEMPOOL_SIZE" value="134217728" />  <!-- 128MB-->
+
+    <composable_node pkg="topic_state_monitor" plugin="topic_state_monitor::TopicStateMonitorNode" name="topic_state_monitor_$(var node_name_suffix)">
+      <param name="topic" value="$(var topic)"/>
+      <param name="topic_type" value="$(var topic_type)"/>
+      <param name="transient_local" value="$(var transient_local)"/>
+      <param name="best_effort" value="$(var best_effort)"/>
+      <param name="diag_name" value="$(var diag_name)"/>
+      <param name="warn_rate" value="$(var warn_rate)"/>
+      <param name="error_rate" value="$(var error_rate)"/>
+      <param name="timeout" value="$(var timeout)"/>
+      <param name="window_size" value="$(var window_size)"/>
+    </composable_node>
+  </node_container>
 </launch>
